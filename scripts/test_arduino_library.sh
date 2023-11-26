@@ -20,22 +20,22 @@
 
 set -e
 
-ARDUINO_HOME_DIR=${HOME}/Arduino
-ARDUINO_LIBRARIES_DIR=${ARDUINO_HOME_DIR}/libraries
-ARDUINO_CLI_TOOL=/tmp/arduino-cli
+#ARDUINO_HOME_DIR=${HOME}/Arduino
+#ARDUINO_LIBRARIES_DIR=${ARDUINO_HOME_DIR}/libraries
+ARDUINO_CLI_TOOL=arduino-cli
 # Necessary due to bug in arduino-cli that allows it to build files in pwd
 TEMP_BUILD_DIR=/tmp/tflite-arduino-build
 
 LIBRARY_DIR=${1}
-LIBRARY_NAME=$(basename ${1})
+#LIBRARY_NAME=$(basename ${1})
 
 rm -rf ${TEMP_BUILD_DIR}
-rm -rf ${ARDUINO_LIBRARIES_DIR}
+#rm -rf ${ARDUINO_LIBRARIES_DIR}
 
-mkdir -p ${ARDUINO_LIBRARIES_DIR}
+#mkdir -p ${ARDUINO_LIBRARIES_DIR}
 mkdir -p ${TEMP_BUILD_DIR}
 
-cp -a ${LIBRARY_DIR} "${ARDUINO_LIBRARIES_DIR}"
+#cp -a ${LIBRARY_DIR} "${ARDUINO_LIBRARIES_DIR}"
 
 # Installs all dependencies for Arduino
 #InstallLibraryDependencies () {
@@ -50,14 +50,14 @@ cp -a ${LIBRARY_DIR} "${ARDUINO_LIBRARIES_DIR}"
 shopt -s nullglob
 
 ino_files=()
-ino_files+=(${ARDUINO_LIBRARIES_DIR}/${LIBRARY_NAME}/examples/*/*.ino)
-ino_files+=(${ARDUINO_LIBRARIES_DIR}/${LIBRARY_NAME}/src/peripherals/examples/*/*.ino)
-ino_files+=(${ARDUINO_LIBRARIES_DIR}/${LIBRARY_NAME}/src/peripherals/tests/*/*.ino)
+ino_files+=(${LIBRARY_DIR}/examples/*/*.ino)
+ino_files+=(${LIBRARY_DIR}/src/peripherals/examples/*/*.ino)
+ino_files+=(${LIBRARY_DIR}/src/peripherals/tests/*/*.ino)
 
 for f in "${ino_files[@]}"; do
   echo "compiling $(basename ${f} .ino)"
   ${ARDUINO_CLI_TOOL} compile --build-cache-path ${TEMP_BUILD_DIR} --build-path ${TEMP_BUILD_DIR} -b arduino:mbed_nano:nano33ble "$f"
 done
 
-rm -rf ${ARDUINO_LIBRARIES_DIR}
+#rm -rf ${ARDUINO_LIBRARIES_DIR}
 rm -rf ${TEMP_BUILD_DIR}

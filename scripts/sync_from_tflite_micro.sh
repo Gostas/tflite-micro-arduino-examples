@@ -54,7 +54,9 @@ python3 "${SCRIPT_DIR}"/create_tflm_arduino.py \
 # Now, at the root of the repo, remove files and subdirectories that will be
 # updated from ${OUTPUT_DIR}
 find "${OUTPUT_DIR}" -maxdepth 1 \! -path "${OUTPUT_DIR}" -printf "%f\n" | xargs -I "{}" rm -rf "{}"
+
+mv ${OUTPUT_DIR}/signal $OUTPUT_DIR/src
 # copy ${OUTPUT_DIR} to the repo
-cp -aT "${OUTPUT_DIR}" "${ROOT_DIR}"
+cp -aT "${OUTPUT_DIR}" ~/Arduino/libraries
 
 rm -rf "${TEMP_DIR}"
