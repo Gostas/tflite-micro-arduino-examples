@@ -47,11 +47,17 @@ readable_run python3 tensorflow/lite/micro/tools/project_generation/create_tflm_
 
 cd "${ROOT_DIR}"
 
+echo create_tflm_tree.py done
+read
+
 readable_run python3 "${SCRIPT_DIR}"/create_tflm_arduino.py \
   --output_dir="${OUTPUT_DIR}" \
   --base_dir="${BASE_DIR}"
 
 mv ${OUTPUT_DIR}/signal $OUTPUT_DIR/src
+
+echo create_tflm_arduino.py done
+read
 
 #readable_run "${SCRIPT_DIR}"/install_arduino_cli.sh
 

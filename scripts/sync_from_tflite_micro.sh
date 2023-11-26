@@ -19,6 +19,7 @@
 
 set -e
 
+ARDUINO_LIB_DIR="~/Arduino/libraries/"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="${SCRIPT_DIR}/.."
 cd "${ROOT_DIR}"
@@ -44,6 +45,9 @@ python3 tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py \
   --makefile_options="TARGET=${TARGET} OPTIMIZED_KERNEL_DIR=${OPTIMIZED_KERNEL_DIR} TARGET_ARCH=${TARGET_ARCH}" \
   "${BASE_DIR}"
 
+echo create_tflm_tree.py done
+read
+
 # Create the final tree in ${OUTPUT_DIR} using the base tree in ${BASE_DIR}
 # The create_tflm_arduino.py script takes care of cleaning ${OUTPUT_DIR}
 cd "${ROOT_DIR}"
@@ -51,12 +55,16 @@ python3 "${SCRIPT_DIR}"/create_tflm_arduino.py \
   --output_dir="${OUTPUT_DIR}" \
   --base_dir="${BASE_DIR}"
 
+echo create_tflm_arduino.py done
+read
+
 # Now, at the root of the repo, remove files and subdirectories that will be
 # updated from ${OUTPUT_DIR}
 find "${OUTPUT_DIR}" -maxdepth 1 \! -path "${OUTPUT_DIR}" -printf "%f\n" | xargs -I "{}" rm -rf "{}"
 
 mv ${OUTPUT_DIR}/signal $OUTPUT_DIR/src
+
 # copy ${OUTPUT_DIR} to the repo
-cp -aT "${OUTPUT_DIR}" ~/Arduino/libraries
+cp -aT --backup=numbered -S "v" "${OUTPUT_DIR}" ${ARDUINO_LIB_DIR}/..
 
 rm -rf "${TEMP_DIR}"
