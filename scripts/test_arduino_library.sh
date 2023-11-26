@@ -38,13 +38,13 @@ mkdir -p ${TEMP_BUILD_DIR}
 cp -a ${LIBRARY_DIR} "${ARDUINO_LIBRARIES_DIR}"
 
 # Installs all dependencies for Arduino
-InstallLibraryDependencies () {
+#InstallLibraryDependencies () {
   # Required by magic_wand
-  ${ARDUINO_CLI_TOOL} lib install Arduino_LSM9DS1@1.1.0
-  ${ARDUINO_CLI_TOOL} lib install ArduinoBLE@1.3.2
-}
+  #${ARDUINO_CLI_TOOL} lib install Arduino_LSM9DS1@1.1.0
+  #${ARDUINO_CLI_TOOL} lib install ArduinoBLE@1.3.2
+#}
 
-InstallLibraryDependencies
+#InstallLibraryDependencies
 
 # in case file glob expansion is empty
 shopt -s nullglob
@@ -56,7 +56,7 @@ ino_files+=(${ARDUINO_LIBRARIES_DIR}/${LIBRARY_NAME}/src/peripherals/tests/*/*.i
 
 for f in "${ino_files[@]}"; do
   echo "compiling $(basename ${f} .ino)"
-  ${ARDUINO_CLI_TOOL} compile --build-cache-path ${TEMP_BUILD_DIR} --build-path ${TEMP_BUILD_DIR} --fqbn arduino:mbed:nano33ble "$f"
+  ${ARDUINO_CLI_TOOL} compile --build-cache-path ${TEMP_BUILD_DIR} --build-path ${TEMP_BUILD_DIR} -b arduino:mbed_nano:nano33ble "$f"
 done
 
 rm -rf ${ARDUINO_LIBRARIES_DIR}

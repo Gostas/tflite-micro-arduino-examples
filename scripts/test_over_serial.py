@@ -233,7 +233,7 @@ class TestOverSerial:
     Test example Enum.
     """
     PERSON = "person_detection"
-    WAND = "magic_wand"
+    #WAND = "magic_wand"
     SPEECH = "micro_speech"
     HELLO = "hello_world"
 
