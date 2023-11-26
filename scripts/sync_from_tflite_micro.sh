@@ -19,7 +19,6 @@
 
 set -e
 
-ARDUINO_LIB_DIR="~/Arduino/libraries/"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="${SCRIPT_DIR}/.."
 cd "${ROOT_DIR}"
@@ -34,7 +33,7 @@ cd tflite-micro
 make -f tensorflow/lite/micro/tools/make/Makefile clean_downloads
 
 BASE_DIR="${TEMP_DIR}/tflm_tree"
-OUTPUT_DIR="${TEMP_DIR}/tflm_arduino"
+OUTPUT_DIR="${TEMP_DIR}/Arduino_TensorFlowLite"
 TARGET=cortex_m_generic
 OPTIMIZED_KERNEL_DIR=cmsis_nn
 TARGET_ARCH=project_generation
@@ -62,9 +61,16 @@ read
 # updated from ${OUTPUT_DIR}
 find "${OUTPUT_DIR}" -maxdepth 1 \! -path "${OUTPUT_DIR}" -printf "%f\n" | xargs -I "{}" rm -rf "{}"
 
+# move signal dir under src so it that it's part of the library
 mv ${OUTPUT_DIR}/signal $OUTPUT_DIR/src
 
-# copy ${OUTPUT_DIR} to the repo
-cp -aT --backup=numbered -S "v" "${OUTPUT_DIR}" ${ARDUINO_LIB_DIR}/..
+ARDUINO_LIB_DIR="${HOME}/Arduino/libraries/"
+LIB_NAME="Arduino_TensorFlowLite.tar.xz"
 
-rm -rf "${TEMP_DIR}"
+# create a compressed archive and move it to Arduino libraries dir
+cd ${TEMP_DIR}
+tar -Jcvf ${LIB_NAME} `basename $OUTPUT_DIR`
+mv ${LIB_NAME} ${ARDUINO_LIB_DIR} --backup=numbered
+
+cd $ROOT_DIR
+rm -rf ${TEMP_DIR}
