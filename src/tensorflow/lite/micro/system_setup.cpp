@@ -36,7 +36,14 @@ limitations under the License.
 #define DEBUG_SERIAL_OBJECT (Serial)
 #endif
 
-extern "C" void DebugLog(const char* s) { DEBUG_SERIAL_OBJECT.print(s); }
+extern "C" void DebugLog(const char* s, va_list args) { 
+#ifndef TF_LITE_STRIP_ERROR_STRINGS
+	constexpr int kMaxLogLen = 256;
+	char log_buffer[kMaxLogLen];
+    vsnprintf(log_buffer, kMaxLogLen, s, args);
+	DEBUG_SERIAL_OBJECT.print(log_buffer); 
+#endif  // TF_LITE_STRIP_ERROR_STRINGS
+}
 
 namespace tflite {
 

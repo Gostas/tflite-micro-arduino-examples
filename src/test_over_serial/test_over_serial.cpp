@@ -22,7 +22,7 @@ limitations under the License.
 #include <tuple>
 
 #include "base64.h"
-#include "tensorflow/lite/micro/micro_string.h"
+//#include "tensorflow/lite/micro/micro_string.h"  // code has been depracated from tflite-micro repo
 #include "tensorflow/lite/micro/system_setup.h"
 
 namespace test_over_serial {
@@ -134,19 +134,19 @@ class TestOverSerialImpl : public TestOverSerial {
 
   void TestOkReply(size_t input_length) {
     char data_length[k64BitUIntLength + 1];
-    MicroSnprintf(data_length, sizeof(data_length), "%u", input_length);
+    snprintf(data_length, sizeof(data_length), "%u", input_length);
     Reply({kCommandOk, kCommandTest, data_length});
   }
 
   void DataAckReply(size_t decoded_length) {
     char data_length[k64BitUIntLength + 1];
-    MicroSnprintf(data_length, sizeof(data_length), "%u", decoded_length);
+    snprintf(data_length, sizeof(data_length), "%u", decoded_length);
     Reply({kCommandDataAck, data_length});
   }
 
   void DataReply(const char* result) {
     char data_length[k64BitUIntLength + 1];
-    MicroSnprintf(data_length, sizeof(data_length), "%u",
+    snprintf(data_length, sizeof(data_length), "%u",
                   data_info_.total * DataTypeToUnitSize());
     Reply({result, kCommandData, DataTypeToString(), data_length});
   }
