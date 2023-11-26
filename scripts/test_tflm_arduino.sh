@@ -38,7 +38,7 @@ BASE_DIR=/tmp/tflm_tree
 OUTPUT_DIR=/tmp/tflm_arduino
 TARGET=cortex_m_generic
 OPTIMIZED_KERNEL_DIR=cmsis_nn
-TARGET_ARCH=cortex-m4
+TARGET_ARCH=cortex-m4+sfp
 
 readable_run python3 tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py \
   -e hello_world -e micro_speech -e person_detection \
@@ -51,7 +51,9 @@ readable_run python3 "${SCRIPT_DIR}"/create_tflm_arduino.py \
   --output_dir="${OUTPUT_DIR}" \
   --base_dir="${BASE_DIR}"
 
-readable_run "${SCRIPT_DIR}"/install_arduino_cli.sh
+mv ${OUTPUT_DIR}/signal $OUTPUT_DIR/src
+
+#readable_run "${SCRIPT_DIR}"/install_arduino_cli.sh
 
 readable_run "${SCRIPT_DIR}"/test_arduino_library.sh \
   "${OUTPUT_DIR}"
