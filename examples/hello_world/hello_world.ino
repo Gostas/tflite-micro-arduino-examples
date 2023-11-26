@@ -19,7 +19,7 @@ limitations under the License.
 #include "main_functions.h"
 #include "model.h"
 #include "output_handler.h"
-#include "tensorflow/lite/micro/all_ops_resolver.h"
+#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/micro/micro_log.h"
 #include "tensorflow/lite/micro/system_setup.h"
@@ -33,9 +33,18 @@ TfLiteTensor* input = nullptr;
 TfLiteTensor* output = nullptr;
 int inference_count = 0;
 
-constexpr int kTensorArenaSize = 2000;
+constexpr int kTensorArenaSize = 3000;
 // Keep aligned to 16 bytes for CMSIS
 alignas(16) uint8_t tensor_arena[kTensorArenaSize];
+}  // namespace
+
+namespace {
+using HelloWorldOpResolver = tflite::MicroMutableOpResolver<1>;
+
+TfLiteStatus RegisterOps(HelloWorldOpResolver& op_resolver) {
+  TF_LITE_ENSURE_STATUS(op_resolver.AddFullyConnected());
+  return kTfLiteOk;
+}
 }  // namespace
 
 // The name of this function is important for Arduino compatibility.
@@ -53,13 +62,16 @@ void setup() {
     return;
   }
 
-  // This pulls in all the operation implementations we need.
-  // NOLINTNEXTLINE(runtime-global-variables)
-  static tflite::AllOpsResolver resolver;
+  HelloWorldOpResolver op_resolver;
+  TfLiteStatus s = RegisterOps(op_resolver);
+  if(s != kTfLiteOk){
+	MicroPrintf("op_resolver error");
+	return;
+  }
 
   // Build an interpreter to run the model with.
   static tflite::MicroInterpreter static_interpreter(
-      model, resolver, tensor_arena, kTensorArenaSize);
+      model, op_resolver, tensor_arena, kTensorArenaSize);
   interpreter = &static_interpreter;
 
   // Allocate memory from the tensor_arena for the model's tensors.
