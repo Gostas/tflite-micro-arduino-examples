@@ -39,10 +39,11 @@ OUTPUT_DIR=/tmp/tflm_arduino
 TARGET=cortex_m_generic
 OPTIMIZED_KERNEL_DIR=cmsis_nn
 TARGET_ARCH=cortex-m4+sfp
+CMSIS_PATH="${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.0.10/cores/arduino/mbed/cmsis/CMSIS_5"
 
 readable_run python3 tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py \
   -e hello_world -e micro_speech -e person_detection \
-  --makefile_options="TARGET=${TARGET} OPTIMIZED_KERNEL_DIR=${OPTIMIZED_KERNEL_DIR} TARGET_ARCH=${TARGET_ARCH}" \
+  --makefile_options="TARGET=${TARGET} OPTIMIZED_KERNEL_DIR=${OPTIMIZED_KERNEL_DIR} TARGET_ARCH=${TARGET_ARCH} CMSIS_PATH=${CMSIS_PATH}" \
   "${BASE_DIR}"
 
 cd "${ROOT_DIR}"
