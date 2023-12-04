@@ -12,17 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-
-# xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-# xxxxxxxxxxxxxxxxxx Does not work yet, because it needs to link to Arduino core xxxxxxxxxxxxxxxxx
-# xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# Configured for Arduino Nano 33 BLE Sense rev.1 (Cortex M4)
+# Creates static library /tmp/gen/cortex_m_generic_cortex-m4+sfp_default/lib/libtensorflow-microlite.a
+# Can be copied to <path to tflite lib>/src/cortex-m4/fpv4-sp-d16-softfp
+# for faster compilation time of Arduino sketches
+#                                   HOW TO RUN
+# From src directory of library
+# make -f tensorflow/lite/micro/tools/make/Makefile TARGET=cortex_m_generic TARGET_ARCH=cortex-m4+softfp OPTIMIZED_KERNEL_DIR=cmsis_nn microlite
+#
 
 ifneq (3.82,$(firstword $(sort $(MAKE_VERSION) 3.82)))
   $(error "Requires make version 3.82 or later (current is $(MAKE_VERSION))")
 endif
 
 # root directory of tensorflow
-TENSORFLOW_ROOT := /tmp/tflm_arduino/src/
+TENSORFLOW_ROOT := ./
 RELATIVE_MAKEFILE_DIR := tensorflow/lite/micro/tools/make
 MAKEFILE_DIR := $(TENSORFLOW_ROOT)$(RELATIVE_MAKEFILE_DIR)
 BAZEL_ROOT := $(TENSORFLOW_ROOT)
@@ -32,6 +36,9 @@ endif
 
 ARDUINO_BOARD_DIR := ${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.0.10
 
+# override these in the makefile.inc for specific compiler targets
+TARGET_TOOLCHAIN_PREFIX :=
+TARGET_TOOLCHAIN_ROOT := ${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/10_3-2021_10/bin/
 
 # Pull in some convenience functions.
 include $(MAKEFILE_DIR)/helper_functions.inc
@@ -88,20 +95,14 @@ CO_PROCESSOR :=
 # This is the way to specify any code path that we want to Include in the build
 # process. This will help us to include external code (code that is not part of
 # github repo) be tested.
+# Link to Arduino core, the Wire library and precompiled libraries for Mbed OS
 EXTERNAL_DIR := \
--I $(ARDUINO_BOARD_DIR)/cores/arduino/api/deprecated/ \
--I $(ARDUINO_BOARD_DIR)/cores/arduino/api/deprecated-avr-comp/ \
--I $(ARDUINO_BOARD_DIR)/cores/arduino/ \
--I $(ARDUINO_BOARD_DIR)/variants/ARDUINO_NANO33BLE/ \
--I $(ARDUINO_BOARD_DIR)/libraries/Wire/ \
+-I $(ARDUINO_BOARD_DIR)/cores/arduino/api/deprecated \
+-I $(ARDUINO_BOARD_DIR)/cores/arduino/api/deprecated-avr-comp \
+-I $(ARDUINO_BOARD_DIR)/cores/arduino \
+-I $(ARDUINO_BOARD_DIR)/variants/ARDUINO_NANO33BLE \
+-I $(ARDUINO_BOARD_DIR)/libraries/Wire \
 -iprefix $(ARDUINO_BOARD_DIR)/cores/arduino @$(ARDUINO_BOARD_DIR)/variants/ARDUINO_NANO33BLE/includes.txt
-# -I $(ARDUINO_BOARD_DIR)/cores/arduino/mbed/targets/TARGET_NORDIC/TARGET_NRF5x/TARGET_NRF52/TARGET_MCU_NRF52840/TARGET_ARDUINO_NANO33BLE \
-# -I $(ARDUINO_BOARD_DIR)/cores/arduino/mbed/targets/TARGET_NORDIC/TARGET_NRF5x/TARGET_NRF52/TARGET_MCU_NRF52840/device \
-# -I $(ARDUINO_BOARD_DIR)/cores/arduino/mbed/targets/TARGET_NORDIC/TARGET_NRF5x/TARGET_SDK_15_0/modules/nrfx/mdk \
-# -I $(ARDUINO_BOARD_DIR)/cores/arduino/mbed/targets/TARGET_NORDIC/TARGET_NRF5x/TARGET_SDK_15_0/modules/nrfx/hal \
-# -I $(ARDUINO_BOARD_DIR)/cores/arduino/mbed/targets/TARGET_NORDIC/TARGET_NRF5x/TARGET_SDK_15_0/modules/nrfx \
-# -I $(ARDUINO_BOARD_DIR)/cores/arduino/mbed/targets/TARGET_NORDIC/TARGET_NRF5x/TARGET_SDK_15_0/integration/nrfx \
-# -I $(ARDUINO_BOARD_DIR)/cores/arduino/mbed/targets/TARGET_NORDIC/TARGET_NRF5x/TARGET_NRF52/TARGET_MCU_NRF52840/config \
 
 
 # This is the downloads directory inside the makefiles directory
@@ -138,8 +139,9 @@ ifneq ($(CO_PROCESSOR),)
 endif
 
 # Add Arduino defines
-ADDITIONAL_DEFINES += -DARDUINO=10607 -DARDUINO_ARDUINO_NANO33BLE -DARDUINO_ARCH_MBED_NANO
-ADDITIONAL_DEFINES += -DARDUINO_ARCH_MBED -DARDUINO_LIBRARY_DISCOVERY_PHASE=0
+ADDITIONAL_DEFINES += @$(ARDUINO_BOARD_DIR)/variants/ARDUINO_NANO33BLE/defines.txt
+ADDITIONAL_DEFINES += -DARDUINO_ARCH_NRF52840 -DARDUINO=10607 -DARDUINO_ARDUINO_NANO33BLE
+ADDITIONAL_DEFINES += -DARDUINO_ARCH_MBED_NANO -DARDUINO_ARCH_MBED -DARDUINO_LIBRARY_DISCOVERY_PHASE=0
 
 ifeq ($(TOOLCHAIN), armclang)
   CORE_OPTIMIZATION_LEVEL := -Oz
@@ -165,7 +167,7 @@ CC_WARNINGS := \
   -Wvla \
   -Wall \
   -Wextra \
-  -Wmissing-field-initializers \
+  -Wno-missing-field-initializers \
   -Wstrict-aliasing \
   -Wno-unused-parameter
 
@@ -185,7 +187,15 @@ COMMON_FLAGS := \
   -fmessage-length=0 \
   -DTF_LITE_STATIC_MEMORY \
   -DTF_LITE_DISABLE_X86_NEON \
+  -DAPPLICATION_ADDR=0x10000 \
+  -DAPPLICATION_SIZE=0xf0000 \
+  -DMBED_RAM_SIZE=0x40000 \
+  -DMBED_RAM_START=0x20000000 \
+  -DMBED_ROM_SIZE=0x100000 \
+  -DMBED_ROM_START=0x0 \
+  -DMBED_TRAP_ERRORS_ENABLED=1 \
   -nostdlib \
+  -MMD \
   $(CC_WARNINGS) \
   $(ADDITIONAL_DEFINES)
 
@@ -196,18 +206,16 @@ ifeq ($(TARGET), $(HOST_OS))
 endif
 
 CXXFLAGS := \
-  -std=c++11 \
+  -std=gnu++14 \
   -fno-rtti \
   -fno-exceptions \
   -fno-threadsafe-statics \
-  -Wnon-virtual-dtor \
-  -MMD \
   $(COMMON_FLAGS)
+  #-Wnon-virtual-dtor # will not compile the arduino core
 
 CCFLAGS := \
   -Wimplicit-function-declaration \
-  -std=c11 \
-  -MMD \
+  -std=gnu11 \
   $(COMMON_FLAGS)
 
 ARFLAGS := -r
@@ -221,10 +229,6 @@ ifeq ($(TOOLCHAIN), gcc)
       -Wl,--gc-sections
   endif
 endif
-
-# override these in the makefile.inc for specific compiler targets
-TARGET_TOOLCHAIN_PREFIX :=
-TARGET_TOOLCHAIN_ROOT := ${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/10_3-2021_10/bin/
 
 # Specifying BUILD_TYPE=<blah> as part of the make command gives us a few
 # options to choose from.
@@ -323,7 +327,7 @@ PRJDIR := $(GENDIR)prj/
 # OLD_MICRO_LITE_BENCHMARKS := $(wildcard $(TENSORFLOW_ROOT)tensorflow/lite/micro/benchmarks/Makefile.inc)
 # MICRO_LITE_BENCHMARKS := $(wildcard $(TENSORFLOW_ROOT)tensorflow/lite/micro/tools/benchmarking/Makefile.inc)
 
-MICRO_LITE_LAYER_BY_LAYER_OUTPUT := $(wildcard $(TENSORFLOW_ROOT)tensorflow/lite/micro/tools/Makefile.inc)
+# MICRO_LITE_LAYER_BY_LAYER_OUTPUT := $(wildcard $(TENSORFLOW_ROOT)tensorflow/lite/micro/tools/Makefile.inc)
 
 # TODO(b/152645559): move all benchmarks to benchmarks directory.
 # MICROLITE_BENCHMARK_SRCS := \
@@ -512,11 +516,19 @@ $(TENSORFLOW_ROOT)signal/src/window.cpp
 
 # The explicitly specified list of sources and headers that are shared between
 # TfLite and TFLM are in the ci/sync_from_upstream_tf.sh script.
+#TFL_CC_SRCS := \
+#$(shell find $(TENSORFLOW_ROOT)tensorflow/lite -type d \( -path $(TENSORFLOW_ROOT)tensorflow/lite/experimental -o -path $(TENSORFLOW_ROOT)tensorflow/lite/micro \) -prune -false -o -name "*.cpp" -o -name "*.c")
+
+#TFL_CC_HDRS := \
+#$(shell find $(TENSORFLOW_ROOT)tensorflow/lite -type d \( -path $(TENSORFLOW_ROOT)tensorflow/lite/experimental -o -path $(TENSORFLOW_ROOT)tensorflow/lite/micro \) -prune -false -o -name "*.h")
+
+# lite/experimental needed for micro_speech example
 TFL_CC_SRCS := \
-$(shell find $(TENSORFLOW_ROOT)tensorflow/lite -type d \( -path $(TENSORFLOW_ROOT)tensorflow/lite/experimental -o -path $(TENSORFLOW_ROOT)tensorflow/lite/micro \) -prune -false -o -name "*.cpp" -o -name "*.c")
+$(shell find $(TENSORFLOW_ROOT)tensorflow/lite -type d \( -path $(TENSORFLOW_ROOT)tensorflow/lite/micro \) -prune -false -o -name "*.cpp" -o -name "*.c")
 
 TFL_CC_HDRS := \
-$(shell find $(TENSORFLOW_ROOT)tensorflow/lite -type d \( -path $(TENSORFLOW_ROOT)tensorflow/lite/experimental -o -path $(TENSORFLOW_ROOT)tensorflow/lite/micro \) -prune -false -o -name "*.h")
+$(shell find $(TENSORFLOW_ROOT)tensorflow/lite -type d \( -path $(TENSORFLOW_ROOT)tensorflow/lite/micro \) -prune -false -o -name "*.h")
+
 
 ifneq ($(BUILD_TYPE), no_tf_lite_static_memory)
   EXCLUDED_TFL_CC_SRCS := \
@@ -684,6 +696,7 @@ ifneq ($(OPTIMIZED_KERNEL_DIR),)
     MICROLITE_CC_SIGNAL_KERNEL_SRCS := $(shell python3 $(MAKEFILE_DIR)/specialize_files.py \
       --base_files "$(MICROLITE_CC_SIGNAL_KERNEL_SRCS)" \
       --specialize_directory $(PATH_TO_SIGNAL_OPTIMIZED_KERNELS))
+
     MICROLITE_CC_KERNEL_SRCS += $(wildcard $(PATH_TO_SIGNAL_OPTIMIZED_KERNELS)/*.S)
     MICROLITE_CC_HDRS += $(wildcard $(PATH_TO_SIGNAL_OPTIMIZED_KERNELS)/*.h)
   endif
@@ -704,6 +717,12 @@ ifneq ($(OPTIMIZED_KERNEL_DIR),)
 endif
 
 MICROLITE_CC_KERNEL_SRCS += $(MICROLITE_CC_SIGNAL_KERNEL_SRCS)
+
+MICROLITE_CC_KERNEL_SRCS += $(wildcard test_over_serial/*.cpp)
+MICROLITE_CC_HDRS += $(wildcard test_over_serial/*.h)
+
+MICROLITE_CC_KERNEL_SRCS += $(wildcard peripherals/*.cpp)
+MICROLITE_CC_HDRS += $(wildcard peripherals/*.h)
 
 # If a co-processor is specified on the command line with
 # CO_PROCESSOR=<co_processor> then we will include ext_libs/<co_processor>.inc
@@ -869,15 +888,15 @@ $(MICROLITE_LIB_PATH): $(MICROLITE_LIB_OBJS) $(MICROLITE_KERNEL_OBJS) $(MICROLIT
 	$(AR) $(ARFLAGS) $(MICROLITE_LIB_PATH) $(MICROLITE_LIB_OBJS) \
 	$(MICROLITE_KERNEL_OBJS) $(MICROLITE_THIRD_PARTY_OBJS) $(MICROLITE_THIRD_PARTY_KERNEL_OBJS) $(MICROLITE_CUSTOM_OP_OBJS)
 
-$(BINDIR)%_test : $(CORE_OBJDIR)%_test.o $(MICROLITE_LIB_PATH)
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) \
-	-o $@ $< \
-	$(MICROLITE_LIB_PATH) $(LDFLAGS) $(MICROLITE_LIBS)
+# $(BINDIR)%_test : $(CORE_OBJDIR)%_test.o $(MICROLITE_LIB_PATH)
+# 	@mkdir -p $(dir $@)
+# 	$(CXX) $(CXXFLAGS) $(INCLUDES) \
+# 	-o $@ $< \
+# 	$(MICROLITE_LIB_PATH) $(LDFLAGS) $(MICROLITE_LIBS)
 
-$(BINDIR)%.test_target: $(BINDIR)%_test
-	@test -f $(TEST_SCRIPT) || (echo 'Unable to find the test script. Is the software emulation available in $(TARGET)?'; exit 1)
-	$(TEST_SCRIPT) $< $(TEST_PASS_STRING)
+# $(BINDIR)%.test_target: $(BINDIR)%_test
+# 	@test -f $(TEST_SCRIPT) || (echo 'Unable to find the test script. Is the software emulation available in $(TARGET)?'; exit 1)
+# 	$(TEST_SCRIPT) $< $(TEST_PASS_STRING)
 
 # snease: Add %.bin rule here since BINDIR is now defined
 # These are microcontroller-specific rules for converting the ELF output

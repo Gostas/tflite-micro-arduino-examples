@@ -1,2 +1,9 @@
 .vscode
 *.swp
+*.bin
+*.hex
+*.elf
+*.map
+*.obj
+*.a
+logs.txt

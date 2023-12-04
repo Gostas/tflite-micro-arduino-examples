@@ -293,7 +293,7 @@ size_t I2S_nrf52840::ReadRecordBuffer(void* const to, const size_t samples) {
     NVIC_EnableIRQ(I2S_IRQn);
   }
 
-  uint8_t* const to2 = static_cast<uint8_t* const>(to) + remain_bytes_1;
+  uint8_t* const to2 = static_cast<uint8_t*>(to) + remain_bytes_1;
   std::memcpy(to, const_cast<uint8_t*>(read_ptr_1), remain_bytes_1);
   std::memcpy(to2, const_cast<uint8_t*>(read_ptr_2), remain_bytes_2);
 
