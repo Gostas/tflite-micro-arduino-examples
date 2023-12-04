@@ -14,6 +14,7 @@ limitations under the License.
 ==============================================================================*/
 
 #include "tensorflow/lite/micro/system_setup.h"
+#include "tensorflow/lite/micro/micro_string.h"
 
 #include <limits>
 
@@ -40,7 +41,7 @@ extern "C" void DebugLog(const char* s, va_list args) {
 #ifndef TF_LITE_STRIP_ERROR_STRINGS
 	constexpr int kMaxLogLen = 256;
 	char log_buffer[kMaxLogLen];
-    vsnprintf(log_buffer, kMaxLogLen, s, args);
+    MicroVsnprintf(log_buffer, kMaxLogLen, s, args);
 	DEBUG_SERIAL_OBJECT.print(log_buffer); 
 #endif  // TF_LITE_STRIP_ERROR_STRINGS
 }

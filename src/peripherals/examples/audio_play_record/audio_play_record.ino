@@ -46,6 +46,8 @@ enum ProgramState { kPlaying, kRecording, kIdle } current_state;
 
 }  // namespace
 
+va_list empty_va_list = va_list();
+
 void setup() {
   // initialize
   tflite::InitializeTarget();
@@ -63,7 +65,7 @@ void setup() {
   if (!audio->SetCurrentConfiguration(config)) {
     while (true) {
       // forever
-      DebugLog("Audio configuration failed\n");
+      DebugLog("Audio configuration failed\n", empty_va_list);
       continue;
     }
   }
@@ -75,7 +77,7 @@ void setup() {
 
   peripherals::LED::Instance().SetBlinkParams(0.33f, 500);
 
-  DebugLog("Setup complete\n");
+  DebugLog("Setup complete\n", empty_va_list);
 }
 
 void loop() {
@@ -91,7 +93,7 @@ void loop() {
       audio->Stop(peripherals::kRecord);
       current_state = kIdle;
       peripherals::LED::Instance().Show(false);
-      DebugLog("Stopped recording\n");
+      DebugLog("Stopped recording\n", empty_va_list);
     } else {
       auto num_read =
           audio->ReadRecordBuffer(&record_play_buffer[record_sample_index][0],
@@ -105,7 +107,7 @@ void loop() {
       audio->Stop(peripherals::kPlay);
       current_state = kIdle;
       peripherals::LED::Instance().Show(false);
-      DebugLog("Stopped playing\n");
+      DebugLog("Stopped playing\n", empty_va_list);
     } else if (play_sample_index == record_sample_index) {
       // zero fill after end of recorded samples
       size_t num_fill = kNumZeroSamples;
@@ -130,7 +132,7 @@ void loop() {
       audio->Start(peripherals::kPlay);
       current_state = kPlaying;
       peripherals::LED::Instance().Show(true);
-      DebugLog("Playing...\n");
+      DebugLog("Playing...\n", empty_va_list);
     } else if (button_state == peripherals::kLongPressDown) {
       // if not recording and not playing, check for button long press to
       // start recording
@@ -138,7 +140,7 @@ void loop() {
       audio->Start(peripherals::kRecord);
       current_state = kRecording;
       peripherals::LED::Instance().Show(true);
-      DebugLog("Recording...\n");
+      DebugLog("Recording...\n", empty_va_list);
     }
   }
 

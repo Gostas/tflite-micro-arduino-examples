@@ -1,4 +1,4 @@
-/* Copyright 2021 The TensorFlow Authors. All Rights Reserved.
+/* Copyright 2023 The TensorFlow Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -63,6 +63,9 @@ TfLiteStatus copyToTensor(TfLiteContext* context, const FromT* in,
     case kTfLiteInt32:
       copyCast(in, out->data.i32, num_elements);
       break;
+    case kTfLiteUInt32:
+      copyCast(in, out->data.u32, num_elements);
+      break;
     case kTfLiteFloat32:
       copyCast(in, tflite::micro::GetTensorData<float>(out), num_elements);
       break;
@@ -107,7 +110,7 @@ TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) {
 }
 }  // namespace
 
-TfLiteRegistration Register_CAST() {
+TFLMRegistration Register_CAST() {
   return tflite::micro::RegisterOp(nullptr, Prepare, Eval);
 }
 
