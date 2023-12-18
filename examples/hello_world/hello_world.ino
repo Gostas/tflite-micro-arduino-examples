@@ -62,7 +62,7 @@ void setup() {
     return;
   }
 
-  HelloWorldOpResolver op_resolver;
+  static HelloWorldOpResolver op_resolver;
   TfLiteStatus s = RegisterOps(op_resolver);
   if(s != kTfLiteOk){
 	MicroPrintf("op_resolver error");
