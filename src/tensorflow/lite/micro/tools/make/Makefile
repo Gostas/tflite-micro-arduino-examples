@@ -15,7 +15,7 @@
 # Configured for Arduino Nano 33 BLE Sense rev.1 (Cortex M4)
 # Creates static library /tmp/gen/cortex_m_generic_cortex-m4+sfp_default/lib/libtensorflow-microlite.a
 # Can be copied to <path to tflite lib>/src/cortex-m4/fpv4-sp-d16-softfp
-# for faster compilation time of Arduino sketches
+# for faster compilation of Arduino sketches
 #                                   HOW TO RUN
 # From src directory of library
 # make -f tensorflow/lite/micro/tools/make/Makefile TARGET=cortex_m_generic TARGET_ARCH=cortex-m4+softfp OPTIMIZED_KERNEL_DIR=cmsis_nn microlite

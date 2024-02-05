@@ -89,7 +89,7 @@ like microphones, cameras, and accelerometers is specific to the `Nano 33 BLE Se
 Compiling sketches that use this library takes a lot of time. We can speed up this process by avoiding recompiling the library every time. To create a static library (.a) which is linked to the sketch during compile time, you can do the following steps.
 From the src/ directory of this library, run
 ```
-make -f tensorflow/lite/micro/tools/make/Makefile TARGET=cortex_m_generic TARGET_ARCH=cortex-m4+softfp OPTIMIZED_KERNEL_DIR=cmsis_nn microlite
+make -f tensorflow/lite/micro/tools/make/Makefile TARGET=cortex_m_generic TARGET_ARCH=cortex-m4+sfp OPTIMIZED_KERNEL_DIR=cmsis_nn microlite
 ```
 It will create the static library in `/tmp/gen/cortex_m_generic_cortex-m4+sfp_default/lib/libtensorflow-microlite.a` which must be copied to `<path to Arduino lib>/src/cortex-m4/fpv4-sp-d16-softfp`.
 
