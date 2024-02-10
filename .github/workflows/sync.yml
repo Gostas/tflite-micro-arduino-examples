@@ -39,6 +39,8 @@ jobs:
           git config --local user.email "konst.pap@hotmail.com"
 
           ./scripts/sync_from_tflite_micro.sh
+
+          git checkout -b "AutoSync"
           git add *
 
           if [[ $(git status --porcelain | wc -l) == 0 ]]; then
@@ -48,7 +50,6 @@ jobs:
           fi
 
       - name: Create Pull Request
-        run: |
-          gh pr create -B base_branch -H main -t 'Automated sync from TFLM' -b 'Created by Github action' -r Gostas
+        run: gh pr create -B main -H "AutoSync" -t 'Automated sync from TFLM' -b 'Created by Github action' -r Gostas
         env:
           GH_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
