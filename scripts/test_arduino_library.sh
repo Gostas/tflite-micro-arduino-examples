@@ -20,31 +20,31 @@
 
 set -e
 
-#ARDUINO_HOME_DIR=${HOME}/Arduino
-#ARDUINO_LIBRARIES_DIR=${ARDUINO_HOME_DIR}/libraries
-ARDUINO_CLI_TOOL=arduino-cli
+ARDUINO_HOME_DIR=${HOME}/Arduino
+ARDUINO_LIBRARIES_DIR=${ARDUINO_HOME_DIR}/libraries
+ARDUINO_CLI_TOOL=/tmp/arduino-cli
 # Necessary due to bug in arduino-cli that allows it to build files in pwd
 TEMP_BUILD_DIR=/tmp/tflite-arduino-build
 
 LIBRARY_DIR=${1}
-#LIBRARY_NAME=$(basename ${1})
+LIBRARY_NAME=$(basename ${1})
 
 rm -rf ${TEMP_BUILD_DIR}
-#rm -rf ${ARDUINO_LIBRARIES_DIR}
+rm -rf ${ARDUINO_LIBRARIES_DIR}
 
-#mkdir -p ${ARDUINO_LIBRARIES_DIR}
+mkdir -p ${ARDUINO_LIBRARIES_DIR}
 mkdir -p ${TEMP_BUILD_DIR}
 
-#cp -a ${LIBRARY_DIR} "${ARDUINO_LIBRARIES_DIR}"
+cp -a ${LIBRARY_DIR} "${ARDUINO_LIBRARIES_DIR}"
 
 # Installs all dependencies for Arduino
-#InstallLibraryDependencies () {
+InstallLibraryDependencies () {
   # Required by magic_wand
-  #${ARDUINO_CLI_TOOL} lib install Arduino_LSM9DS1@1.1.0
-  #${ARDUINO_CLI_TOOL} lib install ArduinoBLE@1.3.2
-#}
+  ${ARDUINO_CLI_TOOL} lib install Arduino_LSM9DS1
+  ${ARDUINO_CLI_TOOL} lib install ArduinoBLE
+}
 
-#InstallLibraryDependencies
+InstallLibraryDependencies
 
 # in case file glob expansion is empty
 shopt -s nullglob
@@ -60,8 +60,8 @@ for f in "${ino_files[@]}"; do
   ${ARDUINO_CLI_TOOL} compile --library ${LIBRARY_DIR} --build-cache-path ${TEMP_BUILD_DIR} \
     --build-path ${TEMP_BUILD_DIR} -b arduino:mbed_nano:nano33ble "$f" -e -v &> logs.txt
   echo Done. Press enter to continue
-  read
+  #read
 done
 
-#rm -rf ${ARDUINO_LIBRARIES_DIR}
-#rm -rf ${TEMP_BUILD_DIR}
+rm -rf ${ARDUINO_LIBRARIES_DIR}
+rm -rf ${TEMP_BUILD_DIR}

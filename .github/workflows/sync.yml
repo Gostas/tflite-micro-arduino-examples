@@ -5,12 +5,13 @@
 # https://yaml-online-parser.appspot.com/
 #
 
-name: (Arduino) Sync from tflite-micro
+name: Sync from tflite-micro
+run-name: ${{ github.actor }} is launching automatic sync from tflm repo
 
 on:
-#  schedule:
+  schedule:
     # 10am UTC is 3am or 4am PT depending on daylight savings.
-#    - cron: '0 10 * * *'
+    - cron: '0 10 * * *'
 
   # Allow manually triggering of the workflow.
   workflow_dispatch: {}
@@ -21,20 +22,16 @@ jobs:
 
     if: |
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'schedule' && github.repository == 'tensorflow/tflite-micro-arduino-examples')
+      (github.event_name == 'schedule' && github.repository == 'Gostas/tflite-micro-arduino-examples')
 
     steps:
-      - uses: actions/setup-python@v2
-      - uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.TFLM_BOT_REPO_TOKEN }}
+      - uses: actions/setup-python@v3
+      - uses: actions/checkout@v4
 
       - name: Sync the code
         run: |
           pip3 install six Pillow Wave
           ./scripts/sync_from_tflite_micro.sh
-          git config --local user.name "TFLM-bot"
-          git config --local user.email "tflm-github-bot@google.com"
           git add *
 
           if [[ $(git status --porcelain | wc -l) == 0 ]]; then
@@ -44,16 +41,11 @@ jobs:
           fi
 
       - name: Create Pull Request
-        id: create-pr
-        uses: peter-evans/create-pull-request@052fc72b4198ba9fbc81b818c6e1859f747d49a8
-        with:
-          branch: sync-from-tflite-micro
-          delete-branch: true
-          token: ${{ secrets.TFLM_BOT_REPO_TOKEN }}
-          title: (Arduino) Automated sync from github.com/tensorflow/tflite-micro
-          commit-message: Automated sync from github.com/tensorflow/tflite-micro
-          committer: TFLM-bot <tflm-github-bot@google.com>
-          author: TFLM-bot <tflm-github-bot@google.com>
-          body: "(Arduino) Automated sync from github.com/tensorflow/tflite-micro"
-          labels: bot:sync-tf, ci:run
-          reviewers: advaitjain
+        run: |
+          gh pr create -B base_branch -H main -t 'Automated sync from TFLM' -b 'Created by Github action' -r Gostas
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
+
+
+# git config --local user.name "TFLM-bot"
+# git config --local user.email "tflm-github-bot@google.com"

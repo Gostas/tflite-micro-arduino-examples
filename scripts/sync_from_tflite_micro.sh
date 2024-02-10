@@ -32,11 +32,14 @@ cd tflite-micro
 
 make -f tensorflow/lite/micro/tools/make/Makefile clean_downloads
 
+readable_run "${SCRIPT_DIR}"/install_arduino_cli.sh
+
 BASE_DIR="${TEMP_DIR}/tflm_tree"
 OUTPUT_DIR="${TEMP_DIR}/Arduino_TensorFlowLite"
 TARGET=cortex_m_generic
 OPTIMIZED_KERNEL_DIR=cmsis_nn
-TARGET_ARCH=project_generation
+TARGET_ARCH=cortex-m4+sfp
+CMSIS_PATH="${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1/cores/arduino/mbed/cmsis/CMSIS_5"
 
 # Create the TFLM base tree
 python3 tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py \
@@ -45,7 +48,7 @@ python3 tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py \
   "${BASE_DIR}"
 
 echo create_tflm_tree.py done
-read
+#read
 
 # Create the final tree in ${OUTPUT_DIR} using the base tree in ${BASE_DIR}
 # The create_tflm_arduino.py script takes care of cleaning ${OUTPUT_DIR}
@@ -55,7 +58,7 @@ python3 "${SCRIPT_DIR}"/create_tflm_arduino.py \
   --base_dir="${BASE_DIR}"
 
 echo create_tflm_arduino.py done
-read
+#read
 
 # Now, at the root of the repo, remove files and subdirectories that will be
 # updated from ${OUTPUT_DIR}
@@ -64,13 +67,16 @@ find "${OUTPUT_DIR}" -maxdepth 1 \! -path "${OUTPUT_DIR}" -printf "%f\n" | xargs
 # move signal dir under src so it that it's part of the library
 mv ${OUTPUT_DIR}/signal $OUTPUT_DIR/src
 
-ARDUINO_LIB_DIR="${HOME}/Arduino/libraries/"
-LIB_NAME="Arduino_TensorFlowLite.tar.xz"
+# ARDUINO_LIB_DIR="${HOME}/Arduino/libraries/"
+# LIB_NAME="Arduino_TensorFlowLite.tar.xz"
 
 # create a compressed archive and move it to Arduino libraries dir
-cd ${TEMP_DIR}
-tar -Jcvf ${LIB_NAME} `basename $OUTPUT_DIR`
-mv ${LIB_NAME} ${ARDUINO_LIB_DIR} --backup=numbered
+# cd ${TEMP_DIR}
+# tar -Jcvf ${LIB_NAME} `basename $OUTPUT_DIR`
+# mv ${LIB_NAME} ${ARDUINO_LIB_DIR} --backup=numbered
 
-cd $ROOT_DIR
+# cd $ROOT_DIR
+
+# copy ${OUTPUT_DIR} to the repo
+cp -aT "${OUTPUT_DIR}" "${ROOT_DIR}"
 rm -rf ${TEMP_DIR}

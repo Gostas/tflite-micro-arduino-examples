@@ -34,12 +34,14 @@ cd tflite-micro
 
 readable_run make -f tensorflow/lite/micro/tools/make/Makefile clean_downloads
 
+readable_run "${SCRIPT_DIR}"/install_arduino_cli.sh
+
 BASE_DIR=/tmp/tflm_tree
 OUTPUT_DIR=/tmp/tflm_arduino
 TARGET=cortex_m_generic
 OPTIMIZED_KERNEL_DIR=cmsis_nn
 TARGET_ARCH=cortex-m4+sfp
-CMSIS_PATH="${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.0.10/cores/arduino/mbed/cmsis/CMSIS_5"
+CMSIS_PATH="${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1/cores/arduino/mbed/cmsis/CMSIS_5"
 
 readable_run python3 tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py \
   -e hello_world -e micro_speech -e person_detection \
@@ -49,18 +51,17 @@ readable_run python3 tensorflow/lite/micro/tools/project_generation/create_tflm_
 cd "${ROOT_DIR}"
 
 echo create_tflm_tree.py done
-read
+#read
 
 readable_run python3 "${SCRIPT_DIR}"/create_tflm_arduino.py \
   --output_dir="${OUTPUT_DIR}" \
   --base_dir="${BASE_DIR}"
 
-mv ${OUTPUT_DIR}/signal $OUTPUT_DIR/src
+mv ${OUTPUT_DIR}/signal ${OUTPUT_DIR}/src
 
 echo create_tflm_arduino.py done
-read
+#read
 
-#readable_run "${SCRIPT_DIR}"/install_arduino_cli.sh
 
 readable_run "${SCRIPT_DIR}"/test_arduino_library.sh \
   "${OUTPUT_DIR}"

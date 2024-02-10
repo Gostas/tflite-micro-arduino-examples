@@ -25,7 +25,7 @@ cd "${ROOT_DIR}"
 
 source "${SCRIPT_DIR}"/helper_functions.sh
 
-#readable_run "${SCRIPT_DIR}"/install_arduino_cli.sh
+readable_run "${SCRIPT_DIR}"/install_arduino_cli.sh
 
 # test_arduino_libarary.sh must be passed a normalized path,
 # thus the cd ${ROOT_DIR} above is required for ${PWD} here.
