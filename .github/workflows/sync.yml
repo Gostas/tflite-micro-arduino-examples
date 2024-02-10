@@ -29,10 +29,15 @@ jobs:
         with:
             python-version: 3.9
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.ACTIONS_TOKEN }}
 
       - name: Sync the code
         run: |
           pip3 install six Pillow Wave numpy
+          git config --local user.name "Gostas"
+          git config --local user.email "konst.pap@hotmail.com"
+
           ./scripts/sync_from_tflite_micro.sh
           git add *
 
@@ -47,7 +52,3 @@ jobs:
           gh pr create -B base_branch -H main -t 'Automated sync from TFLM' -b 'Created by Github action' -r Gostas
         env:
           GH_TOKEN: ${{ secrets.ACTIONS_TOKEN }}
-
-
-# git config --local user.name "TFLM-bot"
-# git config --local user.email "tflm-github-bot@google.com"
