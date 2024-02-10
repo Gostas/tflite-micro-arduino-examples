@@ -11,7 +11,7 @@ run-name: ${{ github.actor }} is launching automatic sync from tflm repo
 on:
   schedule:
     # 10am UTC is 3am or 4am PT depending on daylight savings.
-    - cron: '0 10 * * *'
+    - cron: '0 0 1 1/2 *'
 
   # Allow manually triggering of the workflow.
   workflow_dispatch: {}
@@ -25,12 +25,14 @@ jobs:
       (github.event_name == 'schedule' && github.repository == 'Gostas/tflite-micro-arduino-examples')
 
     steps:
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
+        with:
+            python-version: 3.9
       - uses: actions/checkout@v4
 
       - name: Sync the code
         run: |
-          pip3 install six Pillow Wave
+          pip3 install six Pillow Wave numpy
           ./scripts/sync_from_tflite_micro.sh
           git add *
 

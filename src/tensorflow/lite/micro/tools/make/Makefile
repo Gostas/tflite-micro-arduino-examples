@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-# Configured for Arduino Nano 33 BLE Sense rev.1 (Cortex M4)
+
+# Configured for Arduino Nano 33 BLE Sense rev.1 (Cortex M4F)
 # Creates static library /tmp/gen/cortex_m_generic_cortex-m4+sfp_default/lib/libtensorflow-microlite.a
 # Can be copied to <path to tflite lib>/src/cortex-m4/fpv4-sp-d16-softfp
 # for faster compilation of Arduino sketches
-#                                   HOW TO RUN
+#                                   ~~~HOW TO RUN~~~
 # From src directory of library
-# make -f tensorflow/lite/micro/tools/make/Makefile TARGET=cortex_m_generic TARGET_ARCH=cortex-m4+softfp OPTIMIZED_KERNEL_DIR=cmsis_nn microlite
+# make -f tensorflow/lite/micro/tools/make/Makefile TARGET=cortex_m_generic TARGET_ARCH=cortex-m4+sfp OPTIMIZED_KERNEL_DIR=cmsis_nn microlite
 #
 
 ifneq (3.82,$(firstword $(sort $(MAKE_VERSION) 3.82)))
@@ -34,7 +35,7 @@ ifeq ($(BAZEL_ROOT),)
  BAZEL_ROOT = .
 endif
 
-ARDUINO_BOARD_DIR := ${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.0.10
+ARDUINO_BOARD_DIR := ${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1
 
 # override these in the makefile.inc for specific compiler targets
 TARGET_TOOLCHAIN_PREFIX :=

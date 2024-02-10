@@ -29,15 +29,15 @@ Sync from tflite-micro  | [![Sync from tflite-micro](https://github.com/tensorfl
 ### Toolchain
 
 To compile this library, it is necessary to install a newer toolchain than what Arduino currently provides. I am using the Arm GNU Embedded Toolchain Version [10.3-2021.10](https://developer.arm.com/downloads/-/gnu-rm). The new one includes several intrinsics required by the library.
-It should be installed next to the Arduino provided toolchain, which for Linux is in `~/.arduino15/packages/arduino/tools/arm-none-eabi-gcc` and Windows `C:\Users\<username>\AppData\Local\Arduino15\packages\arduino\tools\arm-none-eabi-gcc`.
+It should be installed next to the Arduino provided toolchain and named "10_3-2021_10", which for Linux is in `~/.arduino15/packages/arduino/tools/arm-none-eabi-gcc` and Windows `C:\Users\<username>\AppData\Local\Arduino15\packages\arduino\tools\arm-none-eabi-gcc`.
 
-Then we need to tell Arduino to use the newer toolchain.  Open the file `~/.arduino15/packages/arduino/hardware/mbed_nano/4.0.10/boards.txt` and change the line that says
+Then we need to tell Arduino to use the newer toolchain.  Open the file `~/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1/boards.txt` and change the line that says
 ```
 nano33ble.build.compiler_path={runtime.tools.arm-none-eabi-gcc-7-2017q4.path}/bin/
 ```
 to
 ```
- nano33ble.build.compiler_path={runtime.tools.arm-none-eabi-gcc-<folder name>.path}/bin/
+ nano33ble.build.compiler_path={runtime.tools.arm-none-eabi-gcc-10_3-2021_10.path}/bin/
 ```
 where *\<folder name\>* is the name of the folder you installed the toolchain in.
 
