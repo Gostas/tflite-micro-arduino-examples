@@ -37,6 +37,12 @@ mkdir -p ${TEMP_BUILD_DIR}
 
 cp -a ${LIBRARY_DIR} "${ARDUINO_LIBRARIES_DIR}"
 
+# build static library
+make -f ${LIBRARY_DIR}/src/tensorflow/lite/micro/tools/make/Makefile TARGET=cortex_m_generic TARGET_ARCH=cortex-m4+sfp OPTIMIZED_KERNEL_DIR=cmsis_nn microlite
+mkdir ${LIBRARY_DIR}/src/cortex-m4
+mkdir ${LIBRARY_DIR}/src/cortex-m4/fpv4-sp-d16-softfp
+mv "/tmp/gen/cortex_m_generic_cortex-m4+sfp_default/lib/libtensorflow-microlite.a" "${LIBRARY_DIR}/cortex-m4/fpv4-sp-d16-softfp"
+
 # Installs all dependencies for Arduino
 InstallLibraryDependencies () {
   # Required by magic_wand
@@ -65,3 +71,4 @@ done
 
 rm -rf ${ARDUINO_LIBRARIES_DIR}
 rm -rf ${TEMP_BUILD_DIR}
+rm -rf /tmp/gen/
