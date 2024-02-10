@@ -36,7 +36,7 @@ tar xzf arduino-cli_0.35.2_Linux_64bit.tar.gz
 # curl -L -O "https://github.com/arduino/arduino-cli/releases/download/0.35.2/arduino-cli_0.35.2_MacOS_64bit.tar.gz"
 # tar xzf arduino-cli_0.35.2_MacOS_64bit.tar.gz
 
-echo "Installing arduino:mbed_nano:nano33ble core"
+echo "Installing arduino:mbed_nano core"
 /tmp/arduino-cli core update-index
 /tmp/arduino-cli core install arduino:mbed_nano
 
