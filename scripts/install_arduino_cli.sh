@@ -24,17 +24,23 @@ set -e
 cd /tmp
 
 rm -rf arduino-cli*
-curl -L -O "https://github.com/arduino/arduino-cli/releases/download/0.35.2/arduino-cli_0.35.2_Linux_64bit.tar.gz"
+echo "Downloading Arduino CLI v0.35.2"
+curl -L -O "https://github.com/arduino/arduino-cli/releases/download/v0.35.2/arduino-cli_0.35.2_Linux_64bit.tar.gz"
+echo "Downloading ARM GNU Toolchain v10.3-2021.10"
 curl -L --output "10_3-2021_10.tar.bz2" "https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2?rev=78196d3461ba4c9089a67b5f33edf82a&hash=5631ACEF1F8F237389F14B41566964EC"
+
+echo "Unpacking Arduino CLI"
 tar xzf arduino-cli_0.35.2_Linux_64bit.tar.gz
 
 # To use with MacOS, replace the previous two lines with:
 # curl -L -O "https://github.com/arduino/arduino-cli/releases/download/0.35.2/arduino-cli_0.35.2_MacOS_64bit.tar.gz"
 # tar xzf arduino-cli_0.35.2_MacOS_64bit.tar.gz
 
+echo "Installing arduino:mbed_nano:nano33ble core"
 /tmp/arduino-cli core update-index
-/tmp/arduino-cli core install arduino:mbed_nano:nano33ble
+/tmp/arduino-cli core install arduino:mbed_nano
 
+echo "Unpacking toolchain"
 tar -xf "10_3-2021_10.tar.bz2"
 mv "gcc-arm-none-eabi-10.3-2021.10" "${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/10_3-2021_10"
 rm -f *.bz2 *.gz
