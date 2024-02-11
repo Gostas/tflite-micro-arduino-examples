@@ -32,7 +32,7 @@ cd tflite-micro
 
 make -f tensorflow/lite/micro/tools/make/Makefile clean_downloads
 
-./"${SCRIPT_DIR}"/install_arduino_cli.sh
+"${SCRIPT_DIR}"/install_arduino_cli.sh
 
 BASE_DIR="${TEMP_DIR}/tflm_tree"
 OUTPUT_DIR="${TEMP_DIR}/Arduino_TensorFlowLite"
