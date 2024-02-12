@@ -33,7 +33,7 @@ THIRD_PARTY_CC_HDRS += $(shell find $(CMSIS_NN_PATH)/Include -name "*.h")
 THIRD_PARTY_CC_HDRS += \
   $(CMSIS_PATH)/LICENSE.txt \
   $(CMSIS_NN_PATH)/LICENSE.txt \
-  $(wildcard $(CMSIS_PATH)/CMSIS/TARGET_CORTEX_M/Include/*.h)
+  $(wildcard $(CMSIS_PATH)/CMSIS/Core/Include/*.h)
 
 # We add -I$(CMSIS_PATH) to enable the code in the TFLM repo (mostly in the
 # tensorflow/lite/micro/kernels/cmsis_nn) to use include paths relative to
@@ -45,5 +45,5 @@ THIRD_PARTY_CC_HDRS += \
 INCLUDES += \
   -I$(CMSIS_PATH) \
   -I$(CMSIS_NN_PATH) \
-  -I$(CMSIS_PATH)/CMSIS/TARGET_CORTEX_M/Include \
+  -I$(CMSIS_PATH)/CMSIS/Core/Include \
   -I$(CMSIS_NN_PATH)/Include

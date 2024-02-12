@@ -27,7 +27,7 @@ ifneq (3.82,$(firstword $(sort $(MAKE_VERSION) 3.82)))
 endif
 
 # root directory of tensorflow
-TENSORFLOW_ROOT := ./
+TENSORFLOW_ROOT ?= ./
 RELATIVE_MAKEFILE_DIR := tensorflow/lite/micro/tools/make
 MAKEFILE_DIR := $(TENSORFLOW_ROOT)$(RELATIVE_MAKEFILE_DIR)
 BAZEL_ROOT := $(TENSORFLOW_ROOT)
@@ -719,11 +719,11 @@ endif
 
 MICROLITE_CC_KERNEL_SRCS += $(MICROLITE_CC_SIGNAL_KERNEL_SRCS)
 
-MICROLITE_CC_KERNEL_SRCS += $(wildcard test_over_serial/*.cpp)
-MICROLITE_CC_HDRS += $(wildcard test_over_serial/*.h)
+MICROLITE_CC_KERNEL_SRCS += $(wildcard $(TENSORFLOW_ROOT)/test_over_serial/*.cpp)
+MICROLITE_CC_HDRS += $(wildcard $(TENSORFLOW_ROOT)/test_over_serial/*.h)
 
-MICROLITE_CC_KERNEL_SRCS += $(wildcard peripherals/*.cpp)
-MICROLITE_CC_HDRS += $(wildcard peripherals/*.h)
+MICROLITE_CC_KERNEL_SRCS += $(wildcard $(TENSORFLOW_ROOT)/peripherals/*.cpp)
+MICROLITE_CC_HDRS += $(wildcard $(TENSORFLOW_ROOT)/peripherals/*.h)
 
 # If a co-processor is specified on the command line with
 # CO_PROCESSOR=<co_processor> then we will include ext_libs/<co_processor>.inc

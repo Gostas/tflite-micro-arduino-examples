@@ -107,7 +107,7 @@ ARM_CPU := "ARMC$(CORE)"
 #CMSIS_PATH := $(CMSIS_DEFAULT_DOWNLOAD_PATH)
 #INCLUDES += \
 #  -I$(CMSIS_PATH)/Device/ARM/$(ARM_CPU)/Include \
-#  -I$(CMSIS_PATH)/CMSIS/Core/Include
+  -I$(CMSIS_PATH)/CMSIS/Core/Include
 
 ifneq ($(filter cortex-m55%,$(TARGET_ARCH)),)
   # soft-abi=soft disables MVE - use softfp instead for M55.
