@@ -18,6 +18,7 @@
 # globally, this can cause problems with previously-installed modules, so we
 # recommend that you only run this within a VM.
 
+# Needs to be run from src dir because of Makefile
 set -e
 
 ARDUINO_HOME_DIR=${HOME}/Arduino
@@ -37,12 +38,12 @@ mkdir -p ${TEMP_BUILD_DIR}
 
 cp -r ${LIBRARY_DIR} "${ARDUINO_LIBRARIES_DIR}"
 # build static library
-make -f ${LIBRARY_DIR}/src/tensorflow/lite/micro/tools/make/Makefile TENSORFLOW_ROOT="$(pwd)/src/" TARGET=cortex_m_generic TARGET_ARCH=cortex-m4+sfp OPTIMIZED_KERNEL_DIR=cmsis_nn microlite
-mkdir ${LIBRARY_DIR}/src/cortex-m4
-mkdir ${LIBRARY_DIR}/src/cortex-m4/fpv4-sp-d16-softfp
-mv "/tmp/gen/cortex_m_generic_cortex-m4+sfp_default/lib/libtensorflow-microlite.a" "${LIBRARY_DIR}/src/cortex-m4/fpv4-sp-d16-softfp"
+make -f "tensorflow/lite/micro/tools/make/Makefile" TARGET=cortex_m_generic TARGET_ARCH=cortex-m4+sfp OPTIMIZED_KERNEL_DIR=cmsis_nn microlite
+rm -rf cortex-m4
+mkdir -p cortex-m4/fpv4-sp-d16-softfp
+mv "/tmp/gen/cortex_m_generic_cortex-m4+sfp_default/lib/libtensorflow-microlite.a" "cortex-m4/fpv4-sp-d16-softfp"
 
-Installs all dependencies for Arduino
+#lInstalls all dependencies for Arduino
 InstallLibraryDependencies () {
  # Required by magic_wand
  ${ARDUINO_CLI_TOOL} lib install Arduino_LSM9DS1
@@ -62,7 +63,7 @@ ino_files+=(${LIBRARY_DIR}/src/peripherals/tests/test_*/*.ino)
 
 for f in "${ino_files[@]}"; do
   echo "Compiling $(basename ${f} .ino)"
-  ${ARDUINO_CLI_TOOL} compile --library ${LIBRARY_DIR} --build-cache-path ${TEMP_BUILD_DIR} \
+  ${ARDUINO_CLI_TOOL} compile --build-cache-path ${TEMP_BUILD_DIR} \
     --build-path ${TEMP_BUILD_DIR} -b arduino:mbed_nano:nano33ble "$f" -e -v &> logs.txt
   echo Done!
   #read
