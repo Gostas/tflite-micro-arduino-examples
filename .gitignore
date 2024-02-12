@@ -5,5 +5,4 @@
 *.elf
 *.map
 *.obj
-*.a
 logs.txt
