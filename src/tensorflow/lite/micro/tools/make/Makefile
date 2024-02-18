@@ -15,11 +15,11 @@
 
 # Configured for Arduino Nano 33 BLE Sense rev.1 (Cortex M4F)
 # Creates static library /tmp/gen/cortex_m_generic_cortex-m4+sfp_default/lib/libtensorflow-microlite.a
-# Can be copied to <path to tflite lib>/src/cortex-m4/fpv4-sp-d16-softfp
-# for faster compilation of Arduino sketches
+#  which can be copied to <path to tflite lib>/src/cortex-m4/fpv4-sp-d16-softfp for faster compilation
+#  of Arduino sketches.
 #                                   ~~~HOW TO RUN~~~
 # From src directory of library
-# make -f tensorflow/lite/micro/tools/make/Makefile TARGET=cortex_m_generic TARGET_ARCH=cortex-m4+sfp OPTIMIZED_KERNEL_DIR=cmsis_nn microlite
+# make -f tensorflow/lite/micro/tools/make/Makefile microlite
 #
 
 ifneq (3.82,$(firstword $(sort $(MAKE_VERSION) 3.82)))
@@ -27,19 +27,16 @@ ifneq (3.82,$(firstword $(sort $(MAKE_VERSION) 3.82)))
 endif
 
 # root directory of tensorflow
-TENSORFLOW_ROOT ?= ./
+TENSORFLOW_ROOT := 
 RELATIVE_MAKEFILE_DIR := tensorflow/lite/micro/tools/make
 MAKEFILE_DIR := $(TENSORFLOW_ROOT)$(RELATIVE_MAKEFILE_DIR)
+ARDUINO_BOARD_DIR := ${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1
 BAZEL_ROOT := $(TENSORFLOW_ROOT)
 ifeq ($(BAZEL_ROOT),)
  BAZEL_ROOT = .
 endif
 
 ARDUINO_BOARD_DIR := ${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1
-
-# override these in the makefile.inc for specific compiler targets
-TARGET_TOOLCHAIN_PREFIX :=
-TARGET_TOOLCHAIN_ROOT := ${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/10_3-2021_10/bin/
 
 # Pull in some convenience functions.
 include $(MAKEFILE_DIR)/helper_functions.inc
@@ -63,11 +60,21 @@ HOST_ARCH := $(shell if uname -m | grep -Eq 'i[345678]86'; then echo x86_32; els
 
 # Override these on the make command line to target a specific architecture. For example:
 # make -f tensorflow/lite/Makefile TARGET=rpi TARGET_ARCH=armv7l
-TARGET := $(HOST_OS)
-TARGET_ARCH := $(HOST_ARCH)
+ARDUINO_BOARD := NANO33BLE
+TARGET := cortex_m_generic
+TARGET_ARCH := cortex-m4+sfp
+
+# Specify which specialized kernel implementation should be pulled in.
+OPTIMIZED_KERNEL_DIR := cmsis_nn
+
+# Specify which co-processor's kernel implementation should be pulled in.
+# If the same kernel is implemented in both kernels/OPTIMIZED_KERNEL_DIR and
+# kernels/CO_PROCESSOR, then the implementation from kernels/CO_PROCESSOR will
+# be used.
+CO_PROCESSOR :=
 
 # Default compiler and tool names:
-TOOLCHAIN:=gcc
+TOOLCHAIN := gcc
 CXX_TOOL := g++
 CC_TOOL := gcc
 AR_TOOL := ar
@@ -76,22 +83,12 @@ ifneq ($(TAGS),)
   $(error The TAGS command line option is no longer supported in the TFLM Makefile.)
 endif
 
-# Specify which specialized kernel implementation should be pulled in.
-OPTIMIZED_KERNEL_DIR :=
 
 # Override this variable from the command line in case the optimized kernels are
 # in a different directory.
 OPTIMIZED_KERNEL_DIR_PREFIX := $(TENSORFLOW_ROOT)tensorflow/lite/micro/kernels
 OPTIMIZED_SIGNAL_KERNEL_DIR_PREFIX := $(TENSORFLOW_ROOT)signal/micro/kernels
 
-# Specify which co-processor's kernel implementation should be pulled in.
-# If the same kernel is implemented in both kernels/OPTIMIZED_KERNEL_DIR and
-# kernels/CO_PROCESSOR, then the implementation from kernels/CO_PROCESSOR will
-# be used.
-CO_PROCESSOR :=
-
-# Arduino core headers
-# ARDUINO_CORE_INCLUDE := $(shell cat $(ARDUINO_BOARD_DIR)/variants/ARDUINO_NANO33BLE/includes.txt)
 
 # This is the way to specify any code path that we want to Include in the build
 # process. This will help us to include external code (code that is not part of
@@ -107,7 +104,7 @@ EXTERNAL_DIR := \
 
 
 # This is the downloads directory inside the makefiles directory
-DOWNLOADS_DIR := $(TENSORFLOW_ROOT)/third_party
+DOWNLOADS_DIR := $(TENSORFLOW_ROOT)third_party
 
 INCLUDES := \
 -I. \
@@ -188,15 +185,6 @@ COMMON_FLAGS := \
   -fmessage-length=0 \
   -DTF_LITE_STATIC_MEMORY \
   -DTF_LITE_DISABLE_X86_NEON \
-  -DAPPLICATION_ADDR=0x10000 \
-  -DAPPLICATION_SIZE=0xf0000 \
-  -DMBED_RAM_SIZE=0x40000 \
-  -DMBED_RAM_START=0x20000000 \
-  -DMBED_ROM_SIZE=0x100000 \
-  -DMBED_ROM_START=0x0 \
-  -DMBED_TRAP_ERRORS_ENABLED=1 \
-  -nostdlib \
-  -MMD \
   $(CC_WARNINGS) \
   $(ADDITIONAL_DEFINES)
 
@@ -212,7 +200,7 @@ CXXFLAGS := \
   -fno-exceptions \
   -fno-threadsafe-statics \
   $(COMMON_FLAGS)
-  #-Wnon-virtual-dtor # will not compile the arduino core
+  #-Wnon-virtual-dtor  will not compile the arduino core
 
 CCFLAGS := \
   -Wimplicit-function-declaration \
@@ -220,6 +208,8 @@ CCFLAGS := \
   $(COMMON_FLAGS)
 
 ARFLAGS := -r
+
+LDFLAGS := 
 
 ifeq ($(TOOLCHAIN), gcc)
   ifneq ($(TARGET), osx)
@@ -281,9 +271,9 @@ else ifeq ($(BUILD_TYPE), no_tf_lite_static_memory)
 
 	# We are using C++17 for the no_tf_lite_static_memory_build to make it close
 	# to the TfLite bazel build.
-	CXXFLAGS := $(filter-out -std=c++11, $(CXXFLAGS))
+	CXXFLAGS := $(filter-out -std=gnu++14, $(CXXFLAGS))
 	CXXFLAGS += -std=c++17
-	CCFLAGS := $(filter-out -std=c11, $(CCLAGS))
+	CCFLAGS := $(filter-out -std=gnu11, $(CCLAGS))
 	CCFLAGS += -std=c17
 endif
 
@@ -335,11 +325,6 @@ PRJDIR := $(GENDIR)prj/
 # $(wildcard $(TENSORFLOW_ROOT)tensorflow/lite/micro/benchmarks/*benchmark.cpp) \
 # $(wildcard $(TENSORFLOW_ROOT)tensorflow/lite/micro/tools/benchmarking/*benchmark.cpp)
 
-CODEGEN_PREPROCESSOR_PATH := $(BINDIR)codegen_preprocessor
-
-#MICRO_LITE_CODEGEN_PREPROCESSOR := $(TENSORFLOW_ROOT)codegen/preprocessor/Makefile.inc
-
-#MICRO_LITE_CODEGEN_EXAMPLES := $(shell find $(TENSORFLOW_ROOT)codegen/examples/ -name Makefile.inc)
 
 # MICROLITE_TEST_SRCS := \
 # $(TENSORFLOW_ROOT)tensorflow/lite/micro/fake_micro_context_test.cpp \
@@ -515,14 +500,6 @@ $(TENSORFLOW_ROOT)signal/src/window.cpp
 # MICROLITE_TEST_HDRS := \
 # $(wildcard $(TENSORFLOW_ROOT)tensorflow/lite/micro/testing/*.h)
 
-# The explicitly specified list of sources and headers that are shared between
-# TfLite and TFLM are in the ci/sync_from_upstream_tf.sh script.
-#TFL_CC_SRCS := \
-#$(shell find $(TENSORFLOW_ROOT)tensorflow/lite -type d \( -path $(TENSORFLOW_ROOT)tensorflow/lite/experimental -o -path $(TENSORFLOW_ROOT)tensorflow/lite/micro \) -prune -false -o -name "*.cpp" -o -name "*.c")
-
-#TFL_CC_HDRS := \
-#$(shell find $(TENSORFLOW_ROOT)tensorflow/lite -type d \( -path $(TENSORFLOW_ROOT)tensorflow/lite/experimental -o -path $(TENSORFLOW_ROOT)tensorflow/lite/micro \) -prune -false -o -name "*.h")
-
 # lite/experimental needed for micro_speech example
 TFL_CC_SRCS := \
 $(shell find $(TENSORFLOW_ROOT)tensorflow/lite -type d \( -path $(TENSORFLOW_ROOT)tensorflow/lite/micro \) -prune -false -o -name "*.cpp" -o -name "*.c")
@@ -618,11 +595,6 @@ include $(MAKEFILE_DIR)/additional_kernels.inc
 MICROLITE_CC_SRCS := $(filter-out $(MICROLITE_TEST_SRCS), $(MICROLITE_CC_BASE_SRCS))
 MICROLITE_CC_SRCS := $(filter-out $(MICROLITE_BENCHMARK_SRCS), $(MICROLITE_CC_SRCS))
 
-# CODEGEN_RUNTIME_CC_SRCS := \
-# $(TENSORFLOW_ROOT)codegen/runtime/micro_codegen_context.cpp
-
-# CODEGEN_RUNTIME_CC_HDRS := \
-# $(TENSORFLOW_ROOT)codegen/runtime/micro_codegen_context.h
 
 # The download scripts require that the downloads directory already exist for
 # improved error checking. To accomodate that, we first create a downloads
@@ -719,11 +691,11 @@ endif
 
 MICROLITE_CC_KERNEL_SRCS += $(MICROLITE_CC_SIGNAL_KERNEL_SRCS)
 
-MICROLITE_CC_KERNEL_SRCS += $(wildcard $(TENSORFLOW_ROOT)/test_over_serial/*.cpp)
-MICROLITE_CC_HDRS += $(wildcard $(TENSORFLOW_ROOT)/test_over_serial/*.h)
+MICROLITE_CC_KERNEL_SRCS += $(wildcard test_over_serial/*.cpp)
+MICROLITE_CC_HDRS += $(wildcard test_over_serial/*.h)
 
-MICROLITE_CC_KERNEL_SRCS += $(wildcard $(TENSORFLOW_ROOT)/peripherals/*.cpp)
-MICROLITE_CC_HDRS += $(wildcard $(TENSORFLOW_ROOT)/peripherals/*.h)
+MICROLITE_CC_KERNEL_SRCS += $(wildcard peripherals/*.cpp)
+MICROLITE_CC_HDRS += $(wildcard peripherals/*.h)
 
 # If a co-processor is specified on the command line with
 # CO_PROCESSOR=<co_processor> then we will include ext_libs/<co_processor>.inc
@@ -749,21 +721,6 @@ ifneq ($(CO_PROCESSOR),)
     endif
   endif
 endif
-
-# Specialize for debug_log. micro_time etc.
-# PATH_TO_TARGET_SRCS := $(TENSORFLOW_ROOT)tensorflow/lite/micro/$(TARGET)
-# MICROLITE_CC_SRCS := $(shell python3 $(MAKEFILE_DIR)/specialize_files.py \
-#   --base_files "$(MICROLITE_CC_SRCS)" \
-#   --specialize_directory $(PATH_TO_TARGET_SRCS))
-
-# The first ifneq is needed to be compatible with make versions prior to 4.2
-# which do not support .SHELLSTATUS. While make 4.2 was released in 2016,
-# Ubuntu 18.04 only has version 4.1
-# ifneq ($(.SHELLSTATUS),)
-#   ifneq ($(.SHELLSTATUS),0)
-#     $(error Error with specialize_files.py $(MICROLITE_CC_SRCS))
-#   endif
-# endif
 
 ALL_SRCS := \
 	$(MICROLITE_CC_SRCS) \
@@ -791,20 +748,12 @@ endif
 # # Load the examples.
 # include $(MICRO_LITE_EXAMPLE_TESTS)
 
-# # Load codegen examples.
-# include $(MICRO_LITE_CODEGEN_EXAMPLES)
-
 # # Load the integration tests.
 # include $(MICRO_LITE_INTEGRATION_TESTS)
 
 # # Load generated micro mutable op resolver test.
 # include ${MICRO_LITE_GEN_MUTABLE_OP_RESOLVER_TEST}
 
-# Load layer_by_layer_output_tool
-ifneq ($(TARGET), $(filter $(TARGET), \
-  bluepill cortex_m_corstone_300 riscv32_generic hexagon))
-include ${MICRO_LITE_LAYER_BY_LAYER_OUTPUT}
-endif
 
 # # Load the benchmarks.
 # include $(OLD_MICRO_LITE_BENCHMARKS)
@@ -813,13 +762,11 @@ endif
 # # Load custom kernel tests.
 # include $(MAKEFILE_DIR)/additional_tests.inc
 
-# # Load codegen preprocessor rules
-# include $(MICRO_LITE_CODEGEN_PREPROCESSOR)
 
 # Create rules for downloading third-party dependencies.
-# THIRD_PARTY_TARGETS :=
-# $(foreach DOWNLOAD,$(THIRD_PARTY_DOWNLOADS),$(eval $(call create_download_rule,$(DOWNLOAD))))
-# third_party_downloads: $(THIRD_PARTY_TARGETS)
+THIRD_PARTY_TARGETS :=
+$(foreach DOWNLOAD,$(THIRD_PARTY_DOWNLOADS),$(eval $(call create_download_rule,$(DOWNLOAD))))
+third_party_downloads: $(THIRD_PARTY_TARGETS)
 
 MICROLITE_LIB_OBJS := $(addprefix $(CORE_OBJDIR), \
 $(patsubst %.S,%.o,$(patsubst %.cpp,%.o,$(patsubst %.c,%.o,$(MICROLITE_CC_SRCS)))))
@@ -899,21 +846,6 @@ $(MICROLITE_LIB_PATH): $(MICROLITE_LIB_OBJS) $(MICROLITE_KERNEL_OBJS) $(MICROLIT
 # 	@test -f $(TEST_SCRIPT) || (echo 'Unable to find the test script. Is the software emulation available in $(TARGET)?'; exit 1)
 # 	$(TEST_SCRIPT) $< $(TEST_PASS_STRING)
 
-# snease: Add %.bin rule here since BINDIR is now defined
-# These are microcontroller-specific rules for converting the ELF output
-# of the linker into a binary image that can be loaded directly.
-# ifeq ($(TOOLCHAIN), armclang)
-#   FROMELF := ${TARGET_TOOLCHAIN_ROOT}$(TARGET_TOOLCHAIN_PREFIX)fromelf
-#   $(BINDIR)%.bin: $(BINDIR)%
-# 		@mkdir -p $(dir $@)
-# 		$(FROMELF) --bin --output=$@ $<
-# else
-#   OBJCOPY := ${TARGET_TOOLCHAIN_ROOT}$(TARGET_TOOLCHAIN_PREFIX)objcopy
-#   $(BINDIR)%.bin: $(BINDIR)%
-# 		@mkdir -p $(dir $@)
-# 		$(OBJCOPY) $< $@ -O binary
-# endif
-
 # Create kernel test targets.
 # include $(TENSORFLOW_ROOT)tensorflow/lite/micro/kernels/Makefile.inc
 
@@ -975,13 +907,6 @@ $(MICROLITE_LIB_PATH): $(MICROLITE_LIB_OBJS) $(MICROLITE_KERNEL_OBJS) $(MICROLIT
 # generated_micro_mutable_op_resolver: $(MICROLITE_GEN_OP_RESOLVER_TEST_TARGETS)
 # endif
 
-# codegen_preprocessor: $(CODEGEN_PREPROCESSOR_PATH)
-
-# $(CODEGEN_PREPROCESSOR_PATH): $(CODEGEN_PREPROCESSOR_SRCS) $(MICROLITE_LIB_PATH)
-# 	@mkdir -p $(dir $@)
-# 	$(CXX) $(CXXFLAGS) $(INCLUDES) \
-# 	-o $@ $< \
-# 	$(MICROLITE_LIB_PATH) $(LDFLAGS) $(MICROLITE_LIBS)
 
 # # Just build the test targets
 # build: $(MICROLITE_BUILD_TARGETS)

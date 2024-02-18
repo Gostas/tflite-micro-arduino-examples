@@ -32,14 +32,6 @@ cd "${TEMP_DIR}"
 git clone --depth 1 --single-branch "https://github.com/tensorflow/tflite-micro.git"
 cd tflite-micro
 
-# Need the mbed core
-readable_run "${SCRIPT_DIR}"/install_arduino_cli.sh
-
-cp -a "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1/cores/arduino/mbed/cmsis/CMSIS_5/" third_party/cmsis
-cp ${ROOT_DIR}/third_party/cmsis/LICENSE.txt third_party/cmsis
-mv third_party/cmsis/CMSIS/TARGET_CORTEX_M third_party/cmsis/CMSIS/Core
-rm -rf third_party/cmsis//CMSIS/TARGET* third_party/cmsis/CMSIS/RTOS2
-
 readable_run make -f tensorflow/lite/micro/tools/make/Makefile clean_downloads
 
 BASE_DIR=/tmp/tflm_tree
@@ -47,12 +39,18 @@ OUTPUT_DIR=/tmp/tflm_arduino
 TARGET=cortex_m_generic
 OPTIMIZED_KERNEL_DIR=cmsis_nn
 TARGET_ARCH=cortex-m4+sfp
-CMSIS_PATH="third_party/cmsis"
 
 readable_run python3 tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py \
   -e hello_world -e micro_speech -e person_detection \
-  --makefile_options="TARGET=${TARGET} OPTIMIZED_KERNEL_DIR=${OPTIMIZED_KERNEL_DIR} TARGET_ARCH=${TARGET_ARCH} CMSIS_PATH=${CMSIS_PATH}" \
-  "${BASE_DIR}"
+  --makefile_options="TARGET=${TARGET} OPTIMIZED_KERNEL_DIR=${OPTIMIZED_KERNEL_DIR} TARGET_ARCH=${TARGET_ARCH}" "${BASE_DIR}"
+
+
+# Need the mbed core
+readable_run "${SCRIPT_DIR}"/install_arduino_cli.sh
+# Replace downloaded CMSIS lib with the one Arduino uses
+cp -a "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1/cores/arduino/mbed/cmsis/CMSIS_5/CMSIS/" ${BASE_DIR}/third_party/cmsis
+mv ${BASE_DIR}/third_party/cmsis/CMSIS/TARGET_CORTEX_M ${BASE_DIR}/third_party/cmsis/CMSIS/Core
+rm -rf ${BASE_DIR}/third_party/cmsis//CMSIS/TARGET* ${BASE_DIR}/third_party/cmsis/CMSIS/RTOS2
 
 cd "${ROOT_DIR}"
 

@@ -1,6 +1,6 @@
 # TensorFlow Lite Micro library for Arduino
 
-This is a fork of the [Arduino TensorFlow Lite Micro](https://github.com/tensorflow/tflite-micro-arduino-examples) library. It has been updated to use the latest code from the [TensorFlow Lite Micro](github.com/tensorflow/tflite-micro) repository, with fully functional example sketches and the additional capability of creating a static library for use with the Arduino environment.
+This is a fork of the [Arduino TensorFlow Lite Micro](https://github.com/tensorflow/tflite-micro-arduino-examples) library. It has been updated to use the latest code from the [TensorFlow Lite Micro](https://github.com/tensorflow/tflite-micro) repository, with fully functional example sketches and the additional capability of creating a static library for use with the Arduino environment.
 
 ## Table of contents
 <!--ts-->
@@ -21,8 +21,8 @@ This is a fork of the [Arduino TensorFlow Lite Micro](https://github.com/tensorf
 
 Build Type          |     Status    |
 ---------------     | ------------- |
-Arduino CLI on Linux  | [![Arduino](https://github.com/tensorflow/tflite-micro-arduino-examples/actions/workflows/ci.yml/badge.svg?event=schedule)](https://github.com/tensorflow/tflite-micro-arduino-examples/actions/workflows/ci.yml)
-Sync from tflite-micro  | [![Sync from tflite-micro](https://github.com/tensorflow/tflite-micro-arduino-examples/actions/workflows/sync.yml/badge.svg)](https://github.com/tensorflow/tflite-micro-arduino-examples/actions/workflows/sync.yml)
+Arduino CLI on Linux  | [![Arduino](https://github.com/Gostas/tflite-micro-arduino-examples/actions/workflows/ci.yml/badge.svg?event=schedule)](https://github.com/Gostas/tflite-micro-arduino-examples/actions/workflows/ci.yml)
+Sync from tflite-micro  | [![Sync from tflite-micro](https://github.com/Gostas/tflite-micro-arduino-examples/actions/workflows/sync.yml/badge.svg)](https://github.com/Gostas/tflite-micro-arduino-examples/actions/workflows/sync.yml)
 
 ## How to Install
 

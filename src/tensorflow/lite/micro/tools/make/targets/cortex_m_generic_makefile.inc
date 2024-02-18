@@ -20,7 +20,7 @@ FLOAT := soft
 GCC_TARGET_ARCH := $(TARGET_ARCH)
 
 # Explicitly set this to true to include the kissfft symbols.
-INCLUDE_MICRO_SPEECH := false
+INCLUDE_MICRO_SPEECH := true
 
 ifeq ($(TARGET_ARCH), cortex-m0)
   CORE=M0
@@ -103,11 +103,10 @@ endif
 
 # Dependency to CMSIS-Device for DWT/PMU counters.
 ARM_CPU := "ARMC$(CORE)"
-#CMSIS_DEFAULT_DOWNLOAD_PATH := $(MAKEFILE_DIR)/downloads/cmsis
-#CMSIS_PATH := $(CMSIS_DEFAULT_DOWNLOAD_PATH)
-#INCLUDES += \
-#  -I$(CMSIS_PATH)/Device/ARM/$(ARM_CPU)/Include \
+CMSIS_PATH := $(TENSORFLOW_ROOT)/third_party/cmsis
+INCLUDES += \
   -I$(CMSIS_PATH)/CMSIS/Core/Include
+# -I$(CMSIS_PATH)/Device/ARM/$(ARM_CPU)/Include
 
 ifneq ($(filter cortex-m55%,$(TARGET_ARCH)),)
   # soft-abi=soft disables MVE - use softfp instead for M55.
@@ -140,21 +139,13 @@ ifeq ($(TOOLCHAIN), armclang)
   MICROLITE_LIBS := $(filter-out -lm,$(MICROLITE_LIBS))
 
 else ifeq ($(TOOLCHAIN), gcc)
-  TARGET_DEFAULT_TOOLCHAIN_ROOT := $(DOWNLOADS_DIR)/gcc_embedded/bin/
-#  TARGET_TOOLCHAIN_ROOT := $(TARGET_DEFAULT_TOOLCHAIN_ROOT)
-#  ifeq ($(TARGET_TOOLCHAIN_ROOT), $(TARGET_DEFAULT_TOOLCHAIN_ROOT))
-#    DOWNLOAD_RESULT := $(shell $(MAKEFILE_DIR)/arm_gcc_download.sh ${DOWNLOADS_DIR} ${TENSORFLOW_ROOT})
-#    ifneq ($(DOWNLOAD_RESULT), SUCCESS)
-#      $(error Something went wrong with the GCC download: $(DOWNLOAD_RESULT))
-#    endif
-#  endif
-
   TARGET_TOOLCHAIN_PREFIX := arm-none-eabi-
+  TARGET_TOOLCHAIN_ROOT := ${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/10_3-2021_10/bin/
 
   FLAGS_GCC = -mcpu=$(GCC_TARGET_ARCH)
-  ifeq ($(TARGET_ARCH), cortex-m4)
+  ifeq ($(GCC_TARGET_ARCH), cortex-m4)
     FLAGS_GCC += -mfpu=fpv4-sp-d16
-  else ifeq ($(TARGET_ARCH), cortex-m7)
+  else ifeq ($(GCC_TARGET_ARCH), cortex-m7)
     FLAGS_GCC += -mfpu=fpv4-sp-d16
   else
     FLAGS_GCC += -mfpu=auto
@@ -178,8 +169,40 @@ PLATFORM_FLAGS = \
   -MD \
   -DCPU_$(CORE)=1
 
+ifeq ($(ARDUINO_BOARD), NANO33BLE)
+  PLATFORM_FLAGS += \
+    -nostdlib \
+    -MMD \
+    -DAPPLICATION_ADDR=0x10000 \
+    -DAPPLICATION_SIZE=0xf0000 \
+    -DMBED_RAM_SIZE=0x40000 \
+    -DMBED_RAM_START=0x20000000 \
+    -DMBED_ROM_SIZE=0x100000 \
+    -DMBED_ROM_START=0x0 \
+    -DMBED_TRAP_ERRORS_ENABLED=1
+  
+  LDFLAGS += \
+    -DMBED_APP_SIZE=0xf0000 \
+    -DMBED_APP_START=0x10000 \
+    -DMBED_BOOT_STACK_SIZE=1024 \
+    -DMBED_RAM_SIZE=0x40000 \
+    -DMBED_RAM_START=0x20000000 \
+    -DMBED_ROM_SIZE=0x100000 \
+    -DMBED_ROM_START=0x0 \
+    -DXIP_ENABLE=0 \
+    -Wl,--wrap,_calloc_r \
+    -Wl,--wrap,_free_r \
+    -Wl,--wrap,_malloc_r \
+    -Wl,--wrap,_memalign_r \
+    -Wl,--wrap,_realloc_r \
+    -Wl,--wrap,atexit \
+    -Wl,--wrap,exit \
+    -Wl,--wrap,main \
+    -Wl,-n
+endif
+
 # For DWT/PMU counters. Header file name is depending on target architecture.
-PLATFORM_FLAGS += -DCMSIS_DEVICE_ARM_CORTEX_M_XX_HEADER_FILE=\"$(ARM_CPU)$(CMSIS_ARM_FEATURES).h\"
+#PLATFORM_FLAGS += -DCMSIS_DEVICE_ARM_CORTEX_M_XX_HEADER_FILE=\"$(ARM_CPU)$(CMSIS_ARM_FEATURES).h\"
 PLATFORM_FLAGS += -D$(ARM_CPU)
 
 # Arm Cortex-M55 and Cortex-M85 use PMU counters.

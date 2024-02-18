@@ -41,15 +41,14 @@ TARGET_ARCH=project_generation
 # Create the TFLM base tree
 python3 tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py \
   -e hello_world -e micro_speech -e person_detection \
-  --makefile_options="TARGET=${TARGET} OPTIMIZED_KERNEL_DIR=${OPTIMIZED_KERNEL_DIR} TARGET_ARCH=${TARGET_ARCH}" \
-  "${BASE_DIR}"
+  --makefile_options="TARGET=${TARGET} OPTIMIZED_KERNEL_DIR=${OPTIMIZED_KERNEL_DIR} TARGET_ARCH=${TARGET_ARCH}" "${BASE_DIR}"
 
 echo create_tflm_tree.py done
 #read
 
 # Need the mbed core
 "${SCRIPT_DIR}"/install_arduino_cli.sh
-
+# Replace downloaded CMSIS lib with the one Arduino uses
 cp -a "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1/cores/arduino/mbed/cmsis/CMSIS_5/CMSIS/" ${BASE_DIR}/third_party/cmsis
 mv ${BASE_DIR}/third_party/cmsis/CMSIS/TARGET_CORTEX_M ${BASE_DIR}/third_party/cmsis/CMSIS/Core
 rm -rf ${BASE_DIR}/third_party/cmsis//CMSIS/TARGET* ${BASE_DIR}/third_party/cmsis/CMSIS/RTOS2
