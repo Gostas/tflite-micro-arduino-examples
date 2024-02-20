@@ -1,6 +1,6 @@
 # Enable u-arch specfic behaviours
 ifneq (,$(filter $(TARGET_ARCH), x86_64))
-  # CMSIS-NN optimizations not supported
+  $(error "CMSIS-NN optimizations not supported")
 endif
 
 ifneq (,$(CMSIS_NN_LIBS))

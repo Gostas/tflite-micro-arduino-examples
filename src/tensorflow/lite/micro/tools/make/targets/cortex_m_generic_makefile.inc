@@ -103,7 +103,7 @@ endif
 
 # Dependency to CMSIS-Device for DWT/PMU counters.
 ARM_CPU := "ARMC$(CORE)"
-CMSIS_PATH := $(TENSORFLOW_ROOT)/third_party/cmsis
+CMSIS_PATH := $(TENSORFLOW_ROOT)third_party/cmsis
 INCLUDES += \
   -I$(CMSIS_PATH)/CMSIS/Core/Include
 # -I$(CMSIS_PATH)/Device/ARM/$(ARM_CPU)/Include
@@ -170,6 +170,21 @@ PLATFORM_FLAGS = \
   -DCPU_$(CORE)=1
 
 ifeq ($(ARDUINO_BOARD), NANO33BLE)
+  # Link to Arduino core, the Wire library and precompiled libraries for Mbed OS
+  EXTERNAL_DIR += \
+    -I$(ARDUINO_BOARD_DIR)/cores/arduino/api/deprecated \
+    -I$(ARDUINO_BOARD_DIR)/cores/arduino/api/deprecated-avr-comp \
+    -I$(ARDUINO_BOARD_DIR)/cores/arduino \
+    -I$(ARDUINO_BOARD_DIR)/variants/ARDUINO_NANO33BLE \
+    -I$(ARDUINO_BOARD_DIR)/libraries/Wire \
+    -iprefix$(ARDUINO_BOARD_DIR)/cores/arduino @$(ARDUINO_BOARD_DIR)/variants/ARDUINO_NANO33BLE/includes.txt
+
+  # Add Arduino defines
+  PLATFORM_DEFINES += @$(ARDUINO_BOARD_DIR)/variants/ARDUINO_NANO33BLE/defines.txt
+  PLATFORM_DEFINES += -DARDUINO_ARCH_NRF52840 -DARDUINO=10607 -DARDUINO_ARDUINO_NANO33BLE
+  PLATFORM_DEFINES += -DARDUINO_ARCH_MBED_NANO -DARDUINO_ARCH_MBED -DARDUINO_LIBRARY_DISCOVERY_PHASE=0
+
+  # Add specific compilation flags
   PLATFORM_FLAGS += \
     -nostdlib \
     -MMD \
@@ -181,6 +196,7 @@ ifeq ($(ARDUINO_BOARD), NANO33BLE)
     -DMBED_ROM_START=0x0 \
     -DMBED_TRAP_ERRORS_ENABLED=1
   
+  # Add specfic linker flags
   LDFLAGS += \
     -DMBED_APP_SIZE=0xf0000 \
     -DMBED_APP_START=0x10000 \
@@ -211,8 +227,10 @@ ifneq ($(filter "ARMCM55" "ARMCM85",$(ARM_CPU)),)
 endif
 
 # Common + C/C++ flags
-CXXFLAGS += $(PLATFORM_FLAGS)
-CCFLAGS += $(PLATFORM_FLAGS)
+CXXFLAGS += $(PLATFORM_FLAGS) 
+CCFLAGS  += $(PLATFORM_FLAGS) 
+CXXFLAGS += $(PLATFORM_DEFINES)
+CCFLAGS += $(PLATFORM_DEFINES)
 
 # Needed for the project generation interface.
 #MICROLITE_CC_HDRS += \

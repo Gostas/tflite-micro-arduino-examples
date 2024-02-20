@@ -26,17 +26,38 @@ ifneq (3.82,$(firstword $(sort $(MAKE_VERSION) 3.82)))
   $(error "Requires make version 3.82 or later (current is $(MAKE_VERSION))")
 endif
 
+ifneq ($(TAGS),)
+  $(error The TAGS command line option is no longer supported in the TFLM Makefile.)
+endif
+
 # root directory of tensorflow
-TENSORFLOW_ROOT := 
+TENSORFLOW_ROOT := ./
 RELATIVE_MAKEFILE_DIR := tensorflow/lite/micro/tools/make
 MAKEFILE_DIR := $(TENSORFLOW_ROOT)$(RELATIVE_MAKEFILE_DIR)
 ARDUINO_BOARD_DIR := ${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1
 BAZEL_ROOT := $(TENSORFLOW_ROOT)
+
 ifeq ($(BAZEL_ROOT),)
  BAZEL_ROOT = .
 endif
 
 ARDUINO_BOARD_DIR := ${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1
+
+# This is the downloads directory inside the makefiles directory
+DOWNLOADS_DIR := $(TENSORFLOW_ROOT)third_party
+
+# Specify which specialized kernel implementation should be pulled in.
+OPTIMIZED_KERNEL_DIR := cmsis_nn
+
+# Override this variable from the command line in case the optimized kernels are
+# in a different directory.
+OPTIMIZED_KERNEL_DIR_PREFIX := $(TENSORFLOW_ROOT)tensorflow/lite/micro/kernels
+OPTIMIZED_SIGNAL_KERNEL_DIR_PREFIX := $(TENSORFLOW_ROOT)signal/micro/kernels
+
+# This is the way to specify any code path that we want to Include in the build
+# process. This will help us to include external code (code that is not part of
+# github repo) be tested.
+EXTERNAL_DIR := 
 
 # Pull in some convenience functions.
 include $(MAKEFILE_DIR)/helper_functions.inc
@@ -64,9 +85,6 @@ ARDUINO_BOARD := NANO33BLE
 TARGET := cortex_m_generic
 TARGET_ARCH := cortex-m4+sfp
 
-# Specify which specialized kernel implementation should be pulled in.
-OPTIMIZED_KERNEL_DIR := cmsis_nn
-
 # Specify which co-processor's kernel implementation should be pulled in.
 # If the same kernel is implemented in both kernels/OPTIMIZED_KERNEL_DIR and
 # kernels/CO_PROCESSOR, then the implementation from kernels/CO_PROCESSOR will
@@ -79,32 +97,6 @@ CXX_TOOL := g++
 CC_TOOL := gcc
 AR_TOOL := ar
 
-ifneq ($(TAGS),)
-  $(error The TAGS command line option is no longer supported in the TFLM Makefile.)
-endif
-
-
-# Override this variable from the command line in case the optimized kernels are
-# in a different directory.
-OPTIMIZED_KERNEL_DIR_PREFIX := $(TENSORFLOW_ROOT)tensorflow/lite/micro/kernels
-OPTIMIZED_SIGNAL_KERNEL_DIR_PREFIX := $(TENSORFLOW_ROOT)signal/micro/kernels
-
-
-# This is the way to specify any code path that we want to Include in the build
-# process. This will help us to include external code (code that is not part of
-# github repo) be tested.
-# Link to Arduino core, the Wire library and precompiled libraries for Mbed OS
-EXTERNAL_DIR := \
--I $(ARDUINO_BOARD_DIR)/cores/arduino/api/deprecated \
--I $(ARDUINO_BOARD_DIR)/cores/arduino/api/deprecated-avr-comp \
--I $(ARDUINO_BOARD_DIR)/cores/arduino \
--I $(ARDUINO_BOARD_DIR)/variants/ARDUINO_NANO33BLE \
--I $(ARDUINO_BOARD_DIR)/libraries/Wire \
--iprefix $(ARDUINO_BOARD_DIR)/cores/arduino @$(ARDUINO_BOARD_DIR)/variants/ARDUINO_NANO33BLE/includes.txt
-
-
-# This is the downloads directory inside the makefiles directory
-DOWNLOADS_DIR := $(TENSORFLOW_ROOT)third_party
 
 INCLUDES := \
 -I. \
@@ -136,10 +128,6 @@ ifneq ($(CO_PROCESSOR),)
   ADDITIONAL_DEFINES += -D$(shell echo $(CO_PROCESSOR) | tr [a-z] [A-Z])
 endif
 
-# Add Arduino defines
-ADDITIONAL_DEFINES += @$(ARDUINO_BOARD_DIR)/variants/ARDUINO_NANO33BLE/defines.txt
-ADDITIONAL_DEFINES += -DARDUINO_ARCH_NRF52840 -DARDUINO=10607 -DARDUINO_ARDUINO_NANO33BLE
-ADDITIONAL_DEFINES += -DARDUINO_ARCH_MBED_NANO -DARDUINO_ARCH_MBED -DARDUINO_LIBRARY_DISCOVERY_PHASE=0
 
 ifeq ($(TOOLCHAIN), armclang)
   CORE_OPTIMIZATION_LEVEL := -Oz
@@ -154,7 +142,6 @@ OPTIMIZATION_LEVEL :=
 ifneq ($(OPTIMIZATION_LEVEL),)
 $(error "OPTIMIZATION_LEVEL is no longer used.")
 endif
-
 
 CC_WARNINGS := \
   -Wsign-compare \
@@ -691,11 +678,11 @@ endif
 
 MICROLITE_CC_KERNEL_SRCS += $(MICROLITE_CC_SIGNAL_KERNEL_SRCS)
 
-MICROLITE_CC_KERNEL_SRCS += $(wildcard test_over_serial/*.cpp)
-MICROLITE_CC_HDRS += $(wildcard test_over_serial/*.h)
+MICROLITE_CC_KERNEL_SRCS += $(wildcard $(TENSORFLOW_ROOT)test_over_serial/*.cpp)
+MICROLITE_CC_HDRS += $(wildcard $(TENSORFLOW_ROOT)test_over_serial/*.h)
 
-MICROLITE_CC_KERNEL_SRCS += $(wildcard peripherals/*.cpp)
-MICROLITE_CC_HDRS += $(wildcard peripherals/*.h)
+MICROLITE_CC_KERNEL_SRCS += $(wildcard $(TENSORFLOW_ROOT)peripherals/*.cpp)
+MICROLITE_CC_HDRS += $(wildcard $(TENSORFLOW_ROOT)peripherals/*.h)
 
 # If a co-processor is specified on the command line with
 # CO_PROCESSOR=<co_processor> then we will include ext_libs/<co_processor>.inc

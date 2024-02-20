@@ -32,7 +32,4 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test
         run: |
-          ./scripts/install_arduino_cli.sh
-          cp /scripts/test_arduino_library.sh src/
-          cd src/ && ./test_arduino_library.sh $(cd .. && pwd)
-          rm test_arduino_library.sh
+          ./scripts/install_arduino_cli.sh .
