@@ -19,7 +19,7 @@ limitations under the License.
 #include <cstdarg>
 #include <cstddef>
 // These functions can be used independent of the MicroErrorReporter to get
-// printf-like functionalitys and are common to all target platforms.
+// printf-like functionalities and are common to all target platforms.
 void MicroPrintf(const char* format, ...);
 void VMicroPrintf(const char* format, va_list args);
 int MicroSnprintf(char* buffer, size_t buf_size, const char* format, ...);

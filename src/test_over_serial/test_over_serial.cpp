@@ -22,7 +22,7 @@ limitations under the License.
 #include <tuple>
 
 #include "base64.h"
-#include "tensorflow/lite/micro/micro_string.h"  // code has been depracated from tflite-micro repo
+#include "tensorflow/lite/micro/micro_log.h"
 #include "tensorflow/lite/micro/system_setup.h"
 
 namespace test_over_serial {
