@@ -33,6 +33,8 @@ TfLiteStatus GetRegistrationFromOpCode(const OperatorCode* opcode,
     status = kTfLiteError;
   } else if (builtin_code != BuiltinOperator_CUSTOM) {
     *registration = op_resolver.FindOp(builtin_code);
+    MicroPrintf("DEB: Found op with opcode '%s'",
+                  EnumNameBuiltinOperator(builtin_code));
     if (*registration == nullptr) {
       MicroPrintf("Didn't find op for builtin opcode '%s'",
                   EnumNameBuiltinOperator(builtin_code));

@@ -247,6 +247,7 @@ TfLiteStatus InitializeTfLiteTensorFromFlatbuffer(
   size_t type_size;
   TF_LITE_ENSURE_STATUS(
       BytesRequiredForTensor(flatbuffer_tensor, &result->bytes, &type_size));
+   MicroPrintf("DEB: Buffer size =%d\n", type_size);
 
   if (flatbuffer_tensor.shape() == nullptr) {
     // flatbuffer_tensor.shape() can return a nullptr in the case of a scalar
@@ -259,6 +260,7 @@ TfLiteStatus InitializeTfLiteTensorFromFlatbuffer(
     // we really want to update the tensor shape, we can always pass in a new
     // TfLiteIntArray - especially we have to do so if the dimension is
     result->dims = FlatBufferVectorToTfLiteTypeArray(flatbuffer_tensor.shape());
+    MicroPrintf("DEB: Tensor shape =%d\n", result->dims);
   }
 
   // Copy the quantization information from the serialized data.
@@ -270,14 +272,18 @@ TfLiteStatus InitializeTfLiteTensorFromFlatbuffer(
     // Always populate the TfLiteTensor.params field, even if there are
     // per-channel quantization parameters.
     result->params.scale = src_quantization->scale()->Get(0);
+    MicroPrintf("DEB: Quant scale=%f\n",(double)src_quantization->scale()->Get(0));
     // Note that the zero_point field in the FlatBuffers schema is a 64-bit
     // integer, but the zero_point field in the TfLiteQuantizationParams struct
     // is a 32-bit integer.
     result->params.zero_point =
         static_cast<int32_t>(src_quantization->zero_point()->Get(0));
 
+    MicroPrintf("DEB: quant zero point=%d\n",src_quantization->zero_point()->Get(0));
+
     // Populate per-channel quantization params.
     int channels = src_quantization->scale()->size();
+    MicroPrintf("DEB: Channels=%d\n",src_quantization->scale()->size());
     TfLiteAffineQuantization* quantization =
         allocate_temp
             ? reinterpret_cast<TfLiteAffineQuantization*>(
@@ -323,10 +329,13 @@ TfLiteStatus InitializeTfLiteTensorFromFlatbuffer(
                                    src_quantization->scale()->size()
                                ? src_quantization->zero_point()->Get(i)
                                : src_quantization->zero_point()->Get(0);
+
+       MicroPrintf("DEB: Zero point data[%d]=%d\n", i, zero_point_data[i]);
     }
     // TODO(rocky): Need to add a micro_allocator test case that fails when
     // this is not copied:
     quantization->quantized_dimension = src_quantization->quantized_dimension();
+    MicroPrintf("DEB: Quantized dimension=%d\n", src_quantization->quantized_dimension());
 
     result->quantization = {kTfLiteAffineQuantization, quantization};
   }
@@ -761,12 +770,17 @@ TfLiteStatus MicroAllocator::AllocateTfLiteEvalTensors(
     const Model* model, SubgraphAllocations* subgraph_allocations) {
   TFLITE_DCHECK(subgraph_allocations != nullptr);
 
+  int n = model->subgraphs()->size();
+  MicroPrintf("DEB: Model subgraphs=%d\n", n);
+
   for (size_t subgraph_idx = 0; subgraph_idx < model->subgraphs()->size();
        subgraph_idx++) {
     const SubGraph* subgraph = model->subgraphs()->Get(subgraph_idx);
     TFLITE_DCHECK(subgraph != nullptr);
 
     size_t alloc_count = subgraph->tensors()->size();
+    MicroPrintf("DEB: Subgraph tensor size = %d\n", alloc_count);
+
     TfLiteEvalTensor* tensors = reinterpret_cast<TfLiteEvalTensor*>(
         persistent_buffer_allocator_->AllocatePersistentBuffer(
             sizeof(TfLiteEvalTensor) * alloc_count, alignof(TfLiteEvalTensor)));

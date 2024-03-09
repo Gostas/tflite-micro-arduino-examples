@@ -114,6 +114,7 @@ TfLiteStatus MicroInterpreter::PrepareNodeAndRegistrationDataFromFlatbuffer() {
     TfLiteBridgeBuiltinDataAllocator* builtin_data_allocator =
         allocator_.GetBuiltinDataAllocator();
     uint32_t operators_size = NumSubgraphOperators(subgraph);
+     MicroPrintf("DEB: Num operators=%d\n", operators_size);
     for (size_t i = 0; i < operators_size; ++i) {
       const auto* op = subgraph->operators()->Get(i);
       const size_t index = op->opcode_index();
@@ -199,6 +200,9 @@ TfLiteStatus MicroInterpreter::PrepareNodeAndRegistrationDataFromFlatbuffer() {
 
 TfLiteStatus MicroInterpreter::AllocateTensors() {
   SubgraphAllocations* allocations = allocator_.StartModelAllocation(model_);
+
+  int n= model_->subgraphs()->size();
+  MicroPrintf("Model subgraphs=%d\n", n);
 
   if (allocations == nullptr) {
     MicroPrintf("Failed starting model allocation.\n");
