@@ -14,9 +14,9 @@ limitations under the License.
 ==============================================================================*/
 
 #include "tensorflow/lite/micro/system_setup.h"
-#include "tensorflow/lite/micro/micro_string.h"
 
 #include <limits>
+#include <cstdio>
 
 #include "tensorflow/lite/micro/debug_log.h"
 
@@ -41,9 +41,19 @@ extern "C" void DebugLog(const char* s, va_list args) {
 #ifndef TF_LITE_STRIP_ERROR_STRINGS
 	constexpr int kMaxLogLen = 256;
 	char log_buffer[kMaxLogLen];
-    MicroVsnprintf(log_buffer, kMaxLogLen, s, args);
+  DebugVsnprintf(log_buffer, kMaxLogLen, s, args);
 	DEBUG_SERIAL_OBJECT.print(log_buffer); 
 #endif  // TF_LITE_STRIP_ERROR_STRINGS
+}
+
+extern "C" int DebugVsnprintf(char* buffer, size_t buf_size, const char* format,
+                   va_list vlist)
+{
+  #ifndef TF_LITE_STRIP_ERROR_STRINGS
+  return vsnprintf(buffer, buf_size, format, vlist);
+  #elif
+  return 0;
+  #endif
 }
 
 namespace tflite {

@@ -37,11 +37,11 @@ mkdir -p ${TEMP_BUILD_DIR}
 
 cp -a ${LIBRARY_DIR} "${ARDUINO_LIBRARIES_DIR}"
 
-# build static library
-make -f ${LIBRARY_DIR}/src/tensorflow/lite/micro/tools/make/Makefile TARGET=cortex_m_generic TARGET_ARCH=cortex-m4+sfp OPTIMIZED_KERNEL_DIR=cmsis_nn microlite
-mkdir ${LIBRARY_DIR}/src/cortex-m4
-mkdir ${LIBRARY_DIR}/src/cortex-m4/fpv4-sp-d16-softfp
-mv "/tmp/gen/cortex_m_generic_cortex-m4+sfp_default/lib/libtensorflow-microlite.a" "${LIBRARY_DIR}/cortex-m4/fpv4-sp-d16-softfp"
+# build static library -- comment out as it's not working currently
+# make -f ${LIBRARY_DIR}/src/tensorflow/lite/micro/tools/make/Makefile TENSORFLOW_ROOT="${LIBRARY_DIR}/src/" microlite
+# mkdir ${LIBRARY_DIR}/src/cortex-m4
+# mkdir ${LIBRARY_DIR}/src/cortex-m4/fpv4-sp-d16-softfp
+# mv "/tmp/gen/cortex_m_generic_cortex-m4+sfp_default/lib/libtensorflow-microlite.a" "${LIBRARY_DIR}/src/cortex-m4/fpv4-sp-d16-softfp"
 
 # Installs all dependencies for Arduino
 InstallLibraryDependencies () {
@@ -64,8 +64,8 @@ ino_files+=(${LIBRARY_DIR}/src/peripherals/tests/test_*/*.ino)
 for f in "${ino_files[@]}"; do
   echo "Compiling $(basename ${f} .ino)"
   ${ARDUINO_CLI_TOOL} compile --library ${LIBRARY_DIR} --build-cache-path ${TEMP_BUILD_DIR} \
-    --build-path ${TEMP_BUILD_DIR} -b arduino:mbed_nano:nano33ble "$f" -e -v &> logs.txt
-  echo Done. Press enter to continue
+    --build-path ${TEMP_BUILD_DIR} -b arduino:mbed_nano:nano33ble "$f"
+  #echo Done. Press enter to continue
   #read
 done
 

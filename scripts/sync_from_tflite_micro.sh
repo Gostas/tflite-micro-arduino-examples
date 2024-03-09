@@ -32,23 +32,27 @@ cd tflite-micro
 
 make -f tensorflow/lite/micro/tools/make/Makefile clean_downloads
 
-"${SCRIPT_DIR}"/install_arduino_cli.sh
-
 BASE_DIR="${TEMP_DIR}/tflm_tree"
 OUTPUT_DIR="${TEMP_DIR}/Arduino_TensorFlowLite"
 TARGET=cortex_m_generic
 OPTIMIZED_KERNEL_DIR=cmsis_nn
-TARGET_ARCH=cortex-m4+sfp
-CMSIS_PATH="${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1/cores/arduino/mbed/cmsis/CMSIS_5"
+TARGET_ARCH=project_generation
 
 # Create the TFLM base tree
 python3 tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py \
   -e hello_world -e micro_speech -e person_detection \
-  --makefile_options="TARGET=${TARGET} OPTIMIZED_KERNEL_DIR=${OPTIMIZED_KERNEL_DIR} TARGET_ARCH=${TARGET_ARCH}" \
-  "${BASE_DIR}"
+  --makefile_options="TARGET=${TARGET} OPTIMIZED_KERNEL_DIR=${OPTIMIZED_KERNEL_DIR} TARGET_ARCH=${TARGET_ARCH}" "${BASE_DIR}"
 
 echo create_tflm_tree.py done
 #read
+
+# Need the mbed core
+"${SCRIPT_DIR}"/install_arduino_cli.sh
+# Replace downloaded CMSIS lib with the one Arduino uses
+cp -a "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1/cores/arduino/mbed/cmsis/CMSIS_5/CMSIS/" ${BASE_DIR}/third_party/cmsis
+mv ${BASE_DIR}/third_party/cmsis/CMSIS/TARGET_CORTEX_M ${BASE_DIR}/third_party/cmsis/CMSIS/Core
+rm -rf ${BASE_DIR}/third_party/cmsis//CMSIS/TARGET* ${BASE_DIR}/third_party/cmsis/CMSIS/RTOS2
+
 
 # Create the final tree in ${OUTPUT_DIR} using the base tree in ${BASE_DIR}
 # The create_tflm_arduino.py script takes care of cleaning ${OUTPUT_DIR}
