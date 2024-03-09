@@ -166,7 +166,7 @@ PLATFORM_FLAGS = \
   -Wno-type-limits \
   -Wno-unused-private-field \
   -fomit-frame-pointer \
-  -MD \
+  -MMD \
   -DCPU_$(CORE)=1
 
 ifeq ($(ARDUINO_BOARD), NANO33BLE)
@@ -187,7 +187,6 @@ ifeq ($(ARDUINO_BOARD), NANO33BLE)
   # Add specific compilation flags
   PLATFORM_FLAGS += \
     -nostdlib \
-    -MMD \
     -DAPPLICATION_ADDR=0x10000 \
     -DAPPLICATION_SIZE=0xf0000 \
     -DMBED_RAM_SIZE=0x40000 \

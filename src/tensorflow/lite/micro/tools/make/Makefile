@@ -19,7 +19,7 @@
 #  of Arduino sketches.
 #                                   ~~~HOW TO RUN~~~
 # From src directory of library
-# make -f tensorflow/lite/micro/tools/make/Makefile microlite
+# make -j 4 -f tensorflow/lite/micro/tools/make/Makefile microlite
 #
 
 ifneq (3.82,$(firstword $(sort $(MAKE_VERSION) 3.82)))
@@ -132,7 +132,7 @@ endif
 ifeq ($(TOOLCHAIN), armclang)
   CORE_OPTIMIZATION_LEVEL := -Oz
 else
-  CORE_OPTIMIZATION_LEVEL := -Os
+  CORE_OPTIMIZATION_LEVEL := -Os # optimize for size (uses mosts -O2 opts)
 endif
 KERNEL_OPTIMIZATION_LEVEL := -O2
 THIRD_PARTY_KERNEL_OPTIMIZATION_LEVEL := -O2
@@ -220,44 +220,54 @@ endif
 # https://github.com/tensorflow/tensorflow/pull/42314#issuecomment-694360567
 BUILD_TYPE := default
 ifeq ($(BUILD_TYPE), debug)
-	# Specifying BUILD_TYPE=debug adds debug symbols to the binary (and makes it
-	# larger) and should be used to run a binary with gdb.
+# Specifying BUILD_TYPE=debug adds debug symbols to the binary (and makes it
+# larger) and should be used to run a binary with gdb.
+# Also sets the optimization flags to optimize the debugging experience.
 	CXXFLAGS += -g
 	CCFLAGS  += -g
+  ifeq ($(TOOLCHAIN), armclang)
+    CORE_OPTIMIZATION_LEVEL := -O1
+    KERNEL_OPTIMIZATION_LEVEL := -O1
+    THIRD_PARTY_KERNEL_OPTIMIZATION_LEVEL := -O1
+  else
+    CORE_OPTIMIZATION_LEVEL := -Og
+    KERNEL_OPTIMIZATION_LEVEL := -Og
+    THIRD_PARTY_KERNEL_OPTIMIZATION_LEVEL := -Og
+  endif
 else ifeq ($(BUILD_TYPE), release)
-	# The 'release' build results in the smallest binary (by virtue of removing
-	# strings from log messages, DCHECKs ...).
-	#
-	# The down-side is that we currently do not have a good mechanism to allow
-	# for logging that is not related to errors (e.g. profiling information, or
-	# logs that help determine if tests pass or fail). As a result, we are unable
-	# to run tests or benchmarks with BUILD_TYPE=release (which is a bit
-	# counter-intuitive). TODO(b/158205789): A global error reporter might help.
-	#
-	# For a close approximation of the release build use
-	# BUILD_TYPE=release_with_logs.
+# The 'release' build results in the smallest binary (by virtue of removing
+# strings from log messages, DCHECKs ...).
+#
+# The down-side is that we currently do not have a good mechanism to allow
+# for logging that is not related to errors (e.g. profiling information, or
+# logs that help determine if tests pass or fail). As a result, we are unable
+# to run tests or benchmarks with BUILD_TYPE=release (which is a bit
+# counter-intuitive). TODO(b/158205789): A global error reporter might help.
+#
+# For a close approximation of the release build use
+# BUILD_TYPE=release_with_logs.
 	CXXFLAGS += -DNDEBUG -DTF_LITE_STRIP_ERROR_STRINGS
 	CCFLAGS  += -DNDEBUG -DTF_LITE_STRIP_ERROR_STRINGS
 else ifeq ($(BUILD_TYPE), release_with_logs)
-	# The latency with BUILD_TYPE=release_with_logs will be close to the 'release'
-	# build and there will still be error logs. This build type may be preferable
-	# for profiling and benchmarking.
+# The latency with BUILD_TYPE=release_with_logs will be close to the 'release'
+# build and there will still be error logs. This build type may be preferable
+# for profiling and benchmarking.
 	CXXFLAGS += -DNDEBUG
 	CCFLAGS  += -DNDEBUG
 else ifeq ($(BUILD_TYPE), no_tf_lite_static_memory)
-	# TODO(b/287320282): remove the no_tf_lite_static_memory build.
-	#
-	# This build should not be used to run any binaries/tests since
-	# TF_LITE_STATIC_MEMORY should be defined for all micro builds. However,
-	# having a build without TF_LITE_STATIC_MEMORY is useful to catch errors in
-	# code that is shared between TfLite Mobile and TfLite Micro. See this issue
-	# for more details:
-	# https://github.com/tensorflow/tensorflow/issues/43076
+# TODO(b/287320282): remove the no_tf_lite_static_memory build.
+#
+# This build should not be used to run any binaries/tests since
+# TF_LITE_STATIC_MEMORY should be defined for all micro builds. However,
+# having a build without TF_LITE_STATIC_MEMORY is useful to catch errors in
+# code that is shared between TfLite Mobile and TfLite Micro. See this issue
+# for more details:
+# https://github.com/tensorflow/tensorflow/issues/43076
 	CXXFLAGS := $(filter-out -DTF_LITE_STATIC_MEMORY, $(CXXFLAGS))
 	CCFLAGS := $(filter-out -DTF_LITE_STATIC_MEMORY, $(CCFLAGS))
 
-	# We are using C++17 for the no_tf_lite_static_memory_build to make it close
-	# to the TfLite bazel build.
+# We are using C++17 for the no_tf_lite_static_memory_build to make it close
+# to the TfLite bazel build.
 	CXXFLAGS := $(filter-out -std=gnu++14, $(CXXFLAGS))
 	CXXFLAGS += -std=c++17
 	CCFLAGS := $(filter-out -std=gnu11, $(CCLAGS))
@@ -617,7 +627,7 @@ $(HOST_OS)
 
 # This specific string needs to be outputted for a test to be recognized as
 # having passed.
-TEST_PASS_STRING:='~~~ALL TESTS PASSED~~~'
+TEST_PASS_STRING := '~~~ALL TESTS PASSED~~~'
 
 # ${TARGET}_makefile.inc can set this to true to allow it to defined a custom
 # implementation for `make test`. See bluepill_makefile as an example.
