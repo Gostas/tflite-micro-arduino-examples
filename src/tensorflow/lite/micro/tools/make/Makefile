@@ -19,7 +19,7 @@
 #  of Arduino sketches.
 #                                   ~~~HOW TO RUN~~~
 # From src directory of library
-# make -j 4 -f tensorflow/lite/micro/tools/make/Makefile microlite
+# make -f tensorflow/lite/micro/tools/make/Makefile -j4 microlite
 #
 
 ifneq (3.82,$(firstword $(sort $(MAKE_VERSION) 3.82)))
@@ -41,7 +41,6 @@ ifeq ($(BAZEL_ROOT),)
  BAZEL_ROOT = .
 endif
 
-ARDUINO_BOARD_DIR := ${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1
 
 # This is the downloads directory inside the makefiles directory
 DOWNLOADS_DIR := $(TENSORFLOW_ROOT)third_party
@@ -80,7 +79,7 @@ endif
 HOST_ARCH := $(shell if uname -m | grep -Eq 'i[345678]86'; then echo x86_32; else echo $(shell uname -m); fi)
 
 # Override these on the make command line to target a specific architecture. For example:
-# make -f tensorflow/lite/Makefile TARGET=rpi TARGET_ARCH=armv7l
+# make -f tensorflow/lite/Makefile TARGET=rpi TARGET_ARCH=aarch64
 ARDUINO_BOARD := NANO33BLE
 TARGET := cortex_m_generic
 TARGET_ARCH := cortex-m4+sfp
@@ -132,7 +131,7 @@ endif
 ifeq ($(TOOLCHAIN), armclang)
   CORE_OPTIMIZATION_LEVEL := -Oz
 else
-  CORE_OPTIMIZATION_LEVEL := -Os # optimize for size (uses mosts -O2 opts)
+  CORE_OPTIMIZATION_LEVEL := -Os # optimize for size (uses mostly -O2 opts)
 endif
 KERNEL_OPTIMIZATION_LEVEL := -O2
 THIRD_PARTY_KERNEL_OPTIMIZATION_LEVEL := -O2
@@ -170,10 +169,10 @@ COMMON_FLAGS := \
   -ffunction-sections \
   -fdata-sections \
   -fmessage-length=0 \
-  -DTF_LITE_STATIC_MEMORY \
   -DTF_LITE_DISABLE_X86_NEON \
   $(CC_WARNINGS) \
   $(ADDITIONAL_DEFINES)
+#  -DTF_LITE_STATIC_MEMORY
 
 ifeq ($(TARGET), $(HOST_OS))
   # If we are not doing a cross-compilation then -DTF_LITE_USE_CTIME is what we

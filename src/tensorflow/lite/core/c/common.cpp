@@ -15,9 +15,9 @@ limitations under the License.
 
 #include "tensorflow/lite/core/c/common.h"
 
-#ifndef TF_LITE_STATIC_MEMORY
+#ifndef ARDUINO
 #include <cstdlib>
-#endif  // TF_LITE_STATIC_MEMORY
+#endif  // ARDUINO
 
 #include <cstring>
 #include <type_traits>
@@ -67,7 +67,7 @@ int TfLiteVarArrayEqual(const T* const a, const T* const b) {
   return TfLiteVarArrayEqualsArray(a, b->size, b->data);
 }
 
-#ifndef TF_LITE_STATIC_MEMORY
+#ifndef ARDUINO
 
 template <class T>
 T* TfLiteVarArrayCreate(const int size) {
@@ -95,7 +95,7 @@ T* TfLiteVarArrayCopy(const T* const src) {
   return ret;
 }
 
-#endif  // TF_LITE_STATIC_MEMORY
+#endif  // ARDUINO
 
 template <class T>
 void TfLiteVarArrayFree(T* a) {
@@ -119,7 +119,7 @@ int TfLiteIntArrayEqualsArray(const TfLiteIntArray* a, int b_size,
   return TfLiteVarArrayEqualsArray(a, b_size, b_data);
 }
 
-#ifndef TF_LITE_STATIC_MEMORY
+#ifndef ARDUINO
 
 TfLiteIntArray* TfLiteIntArrayCreate(int size) {
   return TfLiteVarArrayCreate<TfLiteIntArray>(size);
@@ -131,13 +131,13 @@ TfLiteIntArray* TfLiteIntArrayCopy(const TfLiteIntArray* src) {
 
 void TfLiteIntArrayFree(TfLiteIntArray* a) { TfLiteVarArrayFree(a); }
 
-#endif  // TF_LITE_STATIC_MEMORY
+#endif  // ARDUINO
 
 int TfLiteFloatArrayGetSizeInBytes(int size) {
   return TfLiteVarArrayGetSizeInBytes<TfLiteFloatArray>(size);
 }
 
-#ifndef TF_LITE_STATIC_MEMORY
+#ifndef ARDUINO
 
 TfLiteFloatArray* TfLiteFloatArrayCreate(int size) {
   return TfLiteVarArrayCreate<TfLiteFloatArray>(size);
@@ -336,7 +336,7 @@ TfLiteStatus TfLiteTensorResizeMaybeCopy(size_t num_bytes, TfLiteTensor* tensor,
 TfLiteStatus TfLiteTensorRealloc(size_t num_bytes, TfLiteTensor* tensor) {
   return TfLiteTensorResizeMaybeCopy(num_bytes, tensor, true);
 }
-#endif  // TF_LITE_STATIC_MEMORY
+#endif  // ARDUINO
 
 const char* TfLiteTypeGetName(TfLiteType type) {
   switch (type) {

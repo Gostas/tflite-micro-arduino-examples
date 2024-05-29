@@ -24,7 +24,7 @@ limitations under the License.
 
 #include "tensorflow/lite/core/c/builtin_op_data.h"
 #include "tensorflow/lite/core/c/common.h"
-#ifndef NDEBUG
+#ifndef ARDUINO
 #include "tensorflow/lite/kernels/op_macros.h"
 #endif
 
@@ -171,7 +171,7 @@ inline int NumIntermediates(const TfLiteNode* node) {
 inline int64_t NumElements(const int* dims, int num_dims) {
   int64_t count = 1;
   for (int i = 0; i < num_dims; ++i) {
-#ifndef NDEBUG
+#ifndef ARDUINO
     if (count <= 0) {
       break;
     }

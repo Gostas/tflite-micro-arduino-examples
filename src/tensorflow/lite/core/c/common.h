@@ -126,7 +126,7 @@ typedef struct TfLiteIntArray {
 /// in bytes.
 size_t TfLiteIntArrayGetSizeInBytes(int size);
 
-#ifndef TF_LITE_STATIC_MEMORY
+#ifndef ARDUINO
 /// Create a array of a given `size` (uninitialized entries).
 /// This returns a pointer, that you must free using TfLiteIntArrayFree().
 TfLiteIntArray* TfLiteIntArrayCreate(int size);
@@ -139,14 +139,14 @@ int TfLiteIntArrayEqual(const TfLiteIntArray* a, const TfLiteIntArray* b);
 int TfLiteIntArrayEqualsArray(const TfLiteIntArray* a, int b_size,
                               const int b_data[]);
 
-#ifndef TF_LITE_STATIC_MEMORY
+#ifndef ARDUINO
 /// Create a copy of an array passed as `src`.
 /// You are expected to free memory with TfLiteIntArrayFree
 TfLiteIntArray* TfLiteIntArrayCopy(const TfLiteIntArray* src);
 
 /// Free memory of array `a`.
 void TfLiteIntArrayFree(TfLiteIntArray* a);
-#endif  // TF_LITE_STATIC_MEMORY
+#endif  // ARDUINO
 
 /// Fixed size list of floats. Used for per-channel quantization.
 typedef struct TfLiteFloatArray {
@@ -170,7 +170,7 @@ typedef struct TfLiteFloatArray {
 /// size in bytes.
 int TfLiteFloatArrayGetSizeInBytes(int size);
 
-#ifndef TF_LITE_STATIC_MEMORY
+#ifndef ARDUINO
 /// Create a array of a given `size` (uninitialized entries).
 /// This returns a pointer, that you must free using TfLiteFloatArrayFree().
 TfLiteFloatArray* TfLiteFloatArrayCreate(int size);
@@ -181,7 +181,7 @@ TfLiteFloatArray* TfLiteFloatArrayCopy(const TfLiteFloatArray* src);
 
 /// Free memory of array `a`.
 void TfLiteFloatArrayFree(TfLiteFloatArray* a);
-#endif  // TF_LITE_STATIC_MEMORY
+#endif  // ARDUINO
 
 // Since we must not depend on any libraries, define a minimal subset of
 // error macros while avoiding names that have pre-conceived meanings like
@@ -467,7 +467,7 @@ typedef enum TfLiteCustomAllocationFlags {
 
 /// A tensor in the interpreter system which is a wrapper around a buffer of
 /// data including a dimensionality (or NULL if not currently defined).
-#ifndef TF_LITE_STATIC_MEMORY
+#ifndef ARDUINO
 typedef struct TfLiteTensor {
   /// The data type specification for data stored in `data`. This affects
   /// what member of `data` union should be used.
@@ -580,7 +580,7 @@ typedef struct TfLiteNode {
   /// Whether this op might have side effect (e.g. stateful op).
   bool might_have_side_effect;
 } TfLiteNode;
-#else   // defined(TF_LITE_STATIC_MEMORY)?
+#else   // defined(ARDUINO)?
 // NOTE: This flag is opt-in only at compile time.
 //
 // Specific reduced TfLiteTensor struct for TF Micro runtime. This struct
@@ -665,7 +665,7 @@ typedef struct TfLiteNode {
   const void* custom_initial_data;
   int custom_initial_data_size;
 } TfLiteNode;
-#endif  // TF_LITE_STATIC_MEMORY
+#endif  // ARDUINO
 
 /// Light-weight tensor struct for TF Micro runtime. Provides the minimal amount
 /// of information required for a kernel to run during TfLiteRegistration::Eval.
@@ -685,7 +685,7 @@ typedef struct TfLiteEvalTensor {
   TfLiteType type;
 } TfLiteEvalTensor;
 
-#ifndef TF_LITE_STATIC_MEMORY
+#ifndef ARDUINO
 /// Free data memory of tensor `t`.
 void TfLiteTensorDataFree(TfLiteTensor* t);
 
@@ -734,7 +734,7 @@ TfLiteStatus TfLiteTensorResizeMaybeCopy(size_t num_bytes, TfLiteTensor* tensor,
 /// start of the region up to the minimum of the old and new sizes. In the case
 /// of NULL tensor, or an error allocating new memory, returns `kTfLiteError`.
 TfLiteStatus TfLiteTensorRealloc(size_t num_bytes, TfLiteTensor* tensor);
-#endif  // TF_LITE_STATIC_MEMORY
+#endif  // ARDUINO
 
 /// WARNING: This is an experimental interface that is subject to change.
 ///
@@ -1397,7 +1397,7 @@ typedef struct TfLiteOpaqueDelegateBuilder {
   int64_t flags;
 } TfLiteOpaqueDelegateBuilder;
 
-#ifndef TF_LITE_STATIC_MEMORY
+#ifndef ARDUINO
 // See c_api_opaque.h.
 // This declaration in common.h is only for backwards compatibility.
 // NOTE: This function is part of the TensorFlow Lite Extension APIs, see above.
@@ -1408,7 +1408,7 @@ TfLiteOpaqueDelegate* TfLiteOpaqueDelegateCreate(
 // This declaration in common.h is only for backwards compatibility.
 // NOTE: This function is part of the TensorFlow Lite Extension APIs, see above.
 void TfLiteOpaqueDelegateDelete(TfLiteOpaqueDelegate* delegate);
-#endif  // TF_LITE_STATIC_MEMORY
+#endif  // ARDUINO
 
 // See c_api_opaque.h.
 // This declaration in common.h is only for backwards compatibility.
