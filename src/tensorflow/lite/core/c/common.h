@@ -126,27 +126,12 @@ typedef struct TfLiteIntArray {
 /// in bytes.
 size_t TfLiteIntArrayGetSizeInBytes(int size);
 
-#ifndef TF_LITE_STATIC_MEMORY
-/// Create a array of a given `size` (uninitialized entries).
-/// This returns a pointer, that you must free using TfLiteIntArrayFree().
-TfLiteIntArray* TfLiteIntArrayCreate(int size);
-#endif
-
 /// Check if two intarrays are equal. Returns 1 if they are equal, 0 otherwise.
 int TfLiteIntArrayEqual(const TfLiteIntArray* a, const TfLiteIntArray* b);
 
 /// Check if an intarray equals an array. Returns 1 if equals, 0 otherwise.
 int TfLiteIntArrayEqualsArray(const TfLiteIntArray* a, int b_size,
                               const int b_data[]);
-
-#ifndef TF_LITE_STATIC_MEMORY
-/// Create a copy of an array passed as `src`.
-/// You are expected to free memory with TfLiteIntArrayFree
-TfLiteIntArray* TfLiteIntArrayCopy(const TfLiteIntArray* src);
-
-/// Free memory of array `a`.
-void TfLiteIntArrayFree(TfLiteIntArray* a);
-#endif  // TF_LITE_STATIC_MEMORY
 
 /// Fixed size list of floats. Used for per-channel quantization.
 typedef struct TfLiteFloatArray {
@@ -169,19 +154,6 @@ typedef struct TfLiteFloatArray {
 /// Given the size (number of elements) in a TfLiteFloatArray, calculate its
 /// size in bytes.
 int TfLiteFloatArrayGetSizeInBytes(int size);
-
-#ifndef TF_LITE_STATIC_MEMORY
-/// Create a array of a given `size` (uninitialized entries).
-/// This returns a pointer, that you must free using TfLiteFloatArrayFree().
-TfLiteFloatArray* TfLiteFloatArrayCreate(int size);
-
-/// Create a copy of an array passed as `src`.
-/// You are expected to free memory with TfLiteFloatArrayFree.
-TfLiteFloatArray* TfLiteFloatArrayCopy(const TfLiteFloatArray* src);
-
-/// Free memory of array `a`.
-void TfLiteFloatArrayFree(TfLiteFloatArray* a);
-#endif  // TF_LITE_STATIC_MEMORY
 
 // Since we must not depend on any libraries, define a minimal subset of
 // error macros while avoiding names that have pre-conceived meanings like
@@ -467,121 +439,7 @@ typedef enum TfLiteCustomAllocationFlags {
 
 /// A tensor in the interpreter system which is a wrapper around a buffer of
 /// data including a dimensionality (or NULL if not currently defined).
-#ifndef TF_LITE_STATIC_MEMORY
-typedef struct TfLiteTensor {
-  /// The data type specification for data stored in `data`. This affects
-  /// what member of `data` union should be used.
-  TfLiteType type;
-  /// A union of data pointers. The appropriate type should be used for a typed
-  /// tensor based on `type`.
-  TfLitePtrUnion data;
-  /// A pointer to a structure representing the dimensionality interpretation
-  /// that the buffer should have. NOTE: the product of elements of `dims`
-  /// and the element datatype size should be equal to `bytes` below.
-  TfLiteIntArray* dims;
-  /// Quantization information.
-  TfLiteQuantizationParams params;
-  /// How memory is mapped
-  ///  kTfLiteMmapRo: Memory mapped read only.
-  ///  i.e. weights
-  ///  kTfLiteArenaRw: Arena allocated read write memory
-  ///  (i.e. temporaries, outputs).
-  TfLiteAllocationType allocation_type;
-  /// The number of bytes required to store the data of this Tensor. I.e.
-  /// (bytes of each element) * dims[0] * ... * dims[n-1].  For example, if
-  /// type is kTfLiteFloat32 and dims = {3, 2} then
-  /// bytes = sizeof(float) * 3 * 2 = 4 * 3 * 2 = 24.
-  size_t bytes;
-
-  /// An opaque pointer to a tflite::MMapAllocation
-  const void* allocation;
-
-  /// Null-terminated name of this tensor.
-  const char* name;
-
-  /// The delegate which knows how to handle `buffer_handle`.
-  ///
-  /// WARNING: This is an experimental interface that is subject to change.
-  struct TfLiteDelegate* delegate;
-
-  /// An integer buffer handle that can be handled by `delegate`.
-  /// The value is valid only when delegate is not null.
-  ///
-  /// WARNING: This is an experimental interface that is subject to change.
-  TfLiteBufferHandle buffer_handle;
-
-  /// If the delegate uses its own buffer (e.g. GPU memory), the delegate is
-  /// responsible to set data_is_stale to true.
-  /// `delegate->CopyFromBufferHandle` can be called to copy the data from
-  /// delegate buffer.
-  ///
-  /// WARNING: This is an experimental interface that is subject to change.
-  bool data_is_stale;
-
-  /// True if the tensor is a variable.
-  bool is_variable;
-
-  /// Quantization information. Replaces params field above.
-  TfLiteQuantization quantization;
-
-  /// Parameters used to encode a sparse tensor.
-  /// This is optional. The field is NULL if a tensor is dense.
-  ///
-  /// WARNING: This is an experimental interface that is subject to change.
-  TfLiteSparsity* sparsity;
-
-  /// Optional. Encodes shapes with unknown dimensions with -1. This field is
-  /// only populated when unknown dimensions exist in a read-write tensor (i.e.
-  /// an input or output tensor). (e.g.  `dims` contains [1, 1, 1, 3] and
-  /// `dims_signature` contains [1, -1, -1, 3]).  If no unknown dimensions exist
-  /// then `dims_signature` is either null, or set to an empty array.  Note that
-  /// this field only exists when TF_LITE_STATIC_MEMORY is not defined.
-  const TfLiteIntArray* dims_signature;
-} TfLiteTensor;
-
-/// A structure representing an instance of a node.
-/// This structure only exhibits the inputs, outputs, user defined data and some
-/// node properties (like statefulness), not other features like the type.
-typedef struct TfLiteNode {
-  /// Inputs to this node expressed as indices into the simulator's tensors.
-  TfLiteIntArray* inputs;
-
-  /// Outputs to this node expressed as indices into the simulator's tensors.
-  TfLiteIntArray* outputs;
-
-  /// intermediate tensors to this node expressed as indices into the
-  /// simulator's tensors.
-  TfLiteIntArray* intermediates;
-
-  /// Temporary tensors uses during the computations. This usually contains no
-  /// tensors, but ops are allowed to change that if they need scratch space of
-  /// any sort.
-  TfLiteIntArray* temporaries;
-
-  /// Opaque data provided by the node implementer through `Registration.init`.
-  void* user_data;
-
-  /// Opaque data provided to the node if the node is a builtin. This is usually
-  /// a structure defined in builtin_op_data.h
-  void* builtin_data;
-
-  /// Custom initial data. This is the opaque data provided in the flatbuffer.
-  ///
-  /// WARNING: This is an experimental interface that is subject to change.
-  const void* custom_initial_data;
-  int custom_initial_data_size;
-
-  /// The pointer to the delegate. This is non-null only when the node is
-  /// created by calling `interpreter.ModifyGraphWithDelegate`.
-  ///
-  /// WARNING: This is an experimental interface that is subject to change.
-  struct TfLiteDelegate* delegate;
-
-  /// Whether this op might have side effect (e.g. stateful op).
-  bool might_have_side_effect;
-} TfLiteNode;
-#else   // defined(TF_LITE_STATIC_MEMORY)?
-// NOTE: This flag is opt-in only at compile time.
+// NOTE: TF_LITE_STATIC_MEMORY is opt-in only at compile time.
 //
 // Specific reduced TfLiteTensor struct for TF Micro runtime. This struct
 // contains only the minimum fields required to initialize and prepare a micro
@@ -665,7 +523,6 @@ typedef struct TfLiteNode {
   const void* custom_initial_data;
   int custom_initial_data_size;
 } TfLiteNode;
-#endif  // TF_LITE_STATIC_MEMORY
 
 /// Light-weight tensor struct for TF Micro runtime. Provides the minimal amount
 /// of information required for a kernel to run during TfLiteRegistration::Eval.
@@ -684,57 +541,6 @@ typedef struct TfLiteEvalTensor {
   /// what member of `data` union should be used.
   TfLiteType type;
 } TfLiteEvalTensor;
-
-#ifndef TF_LITE_STATIC_MEMORY
-/// Free data memory of tensor `t`.
-void TfLiteTensorDataFree(TfLiteTensor* t);
-
-/// Free quantization data.
-void TfLiteQuantizationFree(TfLiteQuantization* quantization);
-
-/// Free sparsity parameters.
-void TfLiteSparsityFree(TfLiteSparsity* sparsity);
-
-/// Free memory of tensor `t`.
-void TfLiteTensorFree(TfLiteTensor* t);
-
-/// Set all of a tensor's fields (and free any previously allocated data).
-void TfLiteTensorReset(TfLiteType type, const char* name, TfLiteIntArray* dims,
-                       TfLiteQuantizationParams quantization, char* buffer,
-                       size_t size, TfLiteAllocationType allocation_type,
-                       const void* allocation, bool is_variable,
-                       TfLiteTensor* tensor);
-
-/// Copies the contents of `src` in `dst`.
-/// Function does nothing if either `src` or `dst` is passed as nullptr and
-/// return `kTfLiteOk`.
-/// Returns `kTfLiteError` if `src` and `dst` doesn't have matching data size.
-/// Note function copies contents, so it won't create new data pointer
-/// or change allocation type.
-/// All Tensor related properties will be copied from `src` to `dst` like
-/// quantization, sparsity, ...
-TfLiteStatus TfLiteTensorCopy(const TfLiteTensor* src, TfLiteTensor* dst);
-
-/// Change the size of the memory block owned by `tensor` to `num_bytes`.
-/// Tensors with allocation types other than `kTfLiteDynamic` will be ignored
-/// and a `kTfLiteOk` will be returned. `tensor`'s internal data buffer will be
-/// assigned a pointer which can safely be passed to free or realloc if
-/// `num_bytes` is zero. If `preserve_data` is true, tensor data will be
-/// unchanged in the range from the start of the region up to the minimum of the
-/// old and new sizes. In the case of NULL tensor, or an error allocating new
-/// memory, returns `kTfLiteError`.
-TfLiteStatus TfLiteTensorResizeMaybeCopy(size_t num_bytes, TfLiteTensor* tensor,
-                                         bool preserve_data);
-
-/// Change the size of the memory block owned by `tensor` to `num_bytes`.
-/// Tensors with allocation types other than `kTfLiteDynamic` will be ignored
-/// and a `kTfLiteOk` will be returned. `tensor`'s internal data buffer will be
-/// assigned a pointer which can safely be passed to free or realloc if
-/// `num_bytes` is zero. Tensor data will be unchanged in the range from the
-/// start of the region up to the minimum of the old and new sizes. In the case
-/// of NULL tensor, or an error allocating new memory, returns `kTfLiteError`.
-TfLiteStatus TfLiteTensorRealloc(size_t num_bytes, TfLiteTensor* tensor);
-#endif  // TF_LITE_STATIC_MEMORY
 
 /// WARNING: This is an experimental interface that is subject to change.
 ///
@@ -1396,19 +1202,6 @@ typedef struct TfLiteOpaqueDelegateBuilder {
   /// Bitmask flags. See the comments in `TfLiteDelegateFlags`.
   int64_t flags;
 } TfLiteOpaqueDelegateBuilder;
-
-#ifndef TF_LITE_STATIC_MEMORY
-// See c_api_opaque.h.
-// This declaration in common.h is only for backwards compatibility.
-// NOTE: This function is part of the TensorFlow Lite Extension APIs, see above.
-TfLiteOpaqueDelegate* TfLiteOpaqueDelegateCreate(
-    const TfLiteOpaqueDelegateBuilder* opaque_delegate_builder);
-
-// See c_api_opaque.h.
-// This declaration in common.h is only for backwards compatibility.
-// NOTE: This function is part of the TensorFlow Lite Extension APIs, see above.
-void TfLiteOpaqueDelegateDelete(TfLiteOpaqueDelegate* delegate);
-#endif  // TF_LITE_STATIC_MEMORY
 
 // See c_api_opaque.h.
 // This declaration in common.h is only for backwards compatibility.

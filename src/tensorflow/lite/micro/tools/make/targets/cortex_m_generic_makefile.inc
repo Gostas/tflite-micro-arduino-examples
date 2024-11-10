@@ -140,7 +140,7 @@ ifeq ($(TOOLCHAIN), armclang)
 
 else ifeq ($(TOOLCHAIN), gcc)
   TARGET_TOOLCHAIN_PREFIX := arm-none-eabi-
-  TARGET_TOOLCHAIN_ROOT := ${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/10_3-2021_10/bin/
+  TARGET_TOOLCHAIN_ROOT := ${HOME}/bin/arm-gnu-toolchain-13.3.rel1-aarch64-arm-none-eabi/bin/
 
   FLAGS_GCC = -mcpu=$(GCC_TARGET_ARCH)
   ifeq ($(GCC_TARGET_ARCH), cortex-m4)

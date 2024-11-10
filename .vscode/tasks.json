@@ -1,0 +1,120 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "Build",
+            "command": "arduino-cli",
+            "args": [
+                "compile",
+                "-e",
+                "-b",
+                "arduino:mbed_nano:nano33ble",
+                "${fileDirname}"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "Build Arduino sketch."
+        },
+        {
+            "type": "cppbuild",
+            "label": "Build for debug",
+            "command": "arduino-cli",
+            "args": [
+                "compile",
+                "-e",
+                "-b",
+                "arduino:mbed_nano:nano33ble",
+                "--optimize-for-debug",
+                "${fileDirname}"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Build Arduino sketch for debug."
+        },
+        {
+            "type": "process",
+            "label": "Upload with USB",
+            "command": "arduino-cli",
+            "args": [
+                "upload",
+                "-b",
+                "arduino:mbed_nano:nano33ble",
+                "--input-dir",
+                "${fileDirname}/build/arduino.mbed_nano.nano33ble/",
+                "-p",
+                "/dev/ttyACM0"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "detail": "Upload compiled sketch via USB.",
+            "group": {
+                "kind": "test",
+                "isDefault": false
+            }
+        },
+        {
+            "type": "process",
+            "label": "Upload with CMSIS-DAP",
+            "command": "arduino-cli",
+            "args": [
+                "upload",
+                "-b",
+                "arduino:mbed_nano:nano33ble",
+                "--input-dir",
+                "${fileDirname}/build/arduino.mbed_nano.nano33ble/",
+                "-P",
+                "cmsis-dap"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "detail": "Upload compiled sketch via SWD.",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            }
+        },
+        {
+            "type": "process",
+            "label": "Start OpenOCD",
+            "command": "/home/kpaps/.arduino15/packages/arduino/tools/openocd/0.11.0-arduino2/bin/openocd",
+            "args": [
+                "-s",
+                "/home/kpaps/.arduino15/packages/arduino/tools/openocd/0.11.0-arduino2/share/openocd/scripts/",
+                "--file",
+                "interface/cmsis-dap.cfg",
+                "--file",
+                "/home/kpaps/.arduino15/packages/arduino/hardware/mbed_nano/4.2.1/debugger/select_swd.cfg",
+                "--file",
+                "target/nrf52.cfg",
+                "-c",
+                "telnet_port 0"
+            ],
+            "isBackground": false,
+            "detail": "Start OpenOCD server and connect to the Arduino.",
+            "group": {
+                "kind": "none",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        }
+    ],
+    "version": "2.0.0"
+}

@@ -1,0 +1,31 @@
+{
+    "configurations": [
+        {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "targetArchitecture": "arm",
+            "program": "${fileDirname}/build/arduino.mbed_nano.nano33ble/${fileBasenameNoExtension}.ino.elf",         
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "postRemoteConnectCommands":[
+                { "text": "set remote hardware-watchpoint-limit 2" },
+                { "text": "monitor reset halt" },
+                { "text": "monitor gdb_sync" }
+            ],
+            "hardwareBreakpoints": { "require": true, "limit": 2 },
+            "miDebuggerServerAddress": "localhost:3333",
+            "miDebuggerPath": "/home/kpaps/bin/arm-gnu-toolchain-13.3.rel1-aarch64-arm-none-eabi/bin/arm-none-eabi-gdb"
+        }
+    ],
+    "version": "2.0.0"
+}

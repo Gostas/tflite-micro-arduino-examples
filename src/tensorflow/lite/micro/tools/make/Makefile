@@ -13,13 +13,16 @@
 # limitations under the License.
 # ==============================================================================
 
+#                                   ~~~HOW TO RUN~~~
+# From src directory of library:
+#
+# make -j4 -f tensorflow/lite/micro/tools/make/Makefile microlite
+#
 # Configured for Arduino Nano 33 BLE Sense rev.1 (Cortex M4F)
+#
 # Creates static library /tmp/gen/cortex_m_generic_cortex-m4+sfp_default/lib/libtensorflow-microlite.a
 #  which can be copied to <path to tflite lib>/src/cortex-m4/fpv4-sp-d16-softfp for faster compilation
 #  of Arduino sketches.
-#                                   ~~~HOW TO RUN~~~
-# From src directory of library
-# make -j 4 -f tensorflow/lite/micro/tools/make/Makefile microlite
 #
 
 ifneq (3.82,$(firstword $(sort $(MAKE_VERSION) 3.82)))
@@ -34,14 +37,13 @@ endif
 TENSORFLOW_ROOT := ./
 RELATIVE_MAKEFILE_DIR := tensorflow/lite/micro/tools/make
 MAKEFILE_DIR := $(TENSORFLOW_ROOT)$(RELATIVE_MAKEFILE_DIR)
-ARDUINO_BOARD_DIR := ${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1
+ARDUINO_BOARD_DIR := ${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.2.1
 BAZEL_ROOT := $(TENSORFLOW_ROOT)
 
 ifeq ($(BAZEL_ROOT),)
  BAZEL_ROOT = .
 endif
 
-ARDUINO_BOARD_DIR := ${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1
 
 # This is the downloads directory inside the makefiles directory
 DOWNLOADS_DIR := $(TENSORFLOW_ROOT)third_party
@@ -170,8 +172,8 @@ COMMON_FLAGS := \
   -ffunction-sections \
   -fdata-sections \
   -fmessage-length=0 \
-  -DTF_LITE_STATIC_MEMORY \
   -DTF_LITE_DISABLE_X86_NEON \
+  -DTF_LITE_STATIC_MEMORY \
   $(CC_WARNINGS) \
   $(ADDITIONAL_DEFINES)
 
@@ -825,13 +827,13 @@ $(KERNEL_OBJDIR)%.o: %.S $(THIRD_PARTY_TARGETS)
 	@mkdir -p $(dir $@)
 	$(CC) $(CCFLAGS) $(KERNEL_OPTIMIZATION_LEVEL) $(INCLUDES) -c $< -o $@
 
-microlite: $(MICROLITE_LIB_PATH)
-
 # Gathers together all the objects we've compiled into a single '.a' archive.
 $(MICROLITE_LIB_PATH): $(MICROLITE_LIB_OBJS) $(MICROLITE_KERNEL_OBJS) $(MICROLITE_THIRD_PARTY_OBJS) $(MICROLITE_THIRD_PARTY_KERNEL_OBJS) $(MICROLITE_CUSTOM_OP_OBJS)
 	@mkdir -p $(dir $@)
 	$(AR) $(ARFLAGS) $(MICROLITE_LIB_PATH) $(MICROLITE_LIB_OBJS) \
 	$(MICROLITE_KERNEL_OBJS) $(MICROLITE_THIRD_PARTY_OBJS) $(MICROLITE_THIRD_PARTY_KERNEL_OBJS) $(MICROLITE_CUSTOM_OP_OBJS)
+
+microlite: $(MICROLITE_LIB_PATH)
 
 # $(BINDIR)%_test : $(CORE_OBJDIR)%_test.o $(MICROLITE_LIB_PATH)
 # 	@mkdir -p $(dir $@)
