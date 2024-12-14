@@ -49,7 +49,7 @@ echo create_tflm_tree.py done
 # Need the mbed core
 "${SCRIPT_DIR}"/install_arduino_cli.sh
 # Replace downloaded CMSIS lib with the one Arduino uses
-cp -a "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1/cores/arduino/mbed/cmsis/CMSIS_5/CMSIS/" ${BASE_DIR}/third_party/cmsis
+cp -a "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.2.1/cores/arduino/mbed/cmsis/CMSIS_5/CMSIS/" ${BASE_DIR}/third_party/cmsis
 mv ${BASE_DIR}/third_party/cmsis/CMSIS/TARGET_CORTEX_M ${BASE_DIR}/third_party/cmsis/CMSIS/Core
 rm -rf ${BASE_DIR}/third_party/cmsis//CMSIS/TARGET* ${BASE_DIR}/third_party/cmsis/CMSIS/RTOS2
 
@@ -71,16 +71,10 @@ find "${OUTPUT_DIR}" -maxdepth 1 \! -path "${OUTPUT_DIR}" -printf "%f\n" | xargs
 # move signal dir under src so it that it's part of the library
 mv ${OUTPUT_DIR}/signal $OUTPUT_DIR/src
 
-# ARDUINO_LIB_DIR="${HOME}/Arduino/libraries/"
-# LIB_NAME="Arduino_TensorFlowLite.tar.xz"
-
-# create a compressed archive and move it to Arduino libraries dir
-# cd ${TEMP_DIR}
-# tar -Jcvf ${LIB_NAME} `basename $OUTPUT_DIR`
-# mv ${LIB_NAME} ${ARDUINO_LIB_DIR} --backup=numbered
+ARDUINO_LIB_DIR="${HOME}/Arduino/libraries/"
 
 # cd $ROOT_DIR
 
 # copy ${OUTPUT_DIR} to the repo
-cp -aT "${OUTPUT_DIR}" "${ROOT_DIR}"
+cp -aT "${OUTPUT_DIR}" "${ARDUINO_LIB_DIR}"
 rm -rf ${TEMP_DIR}

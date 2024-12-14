@@ -14,7 +14,7 @@
 # limitations under the License.
 # ==============================================================================
 #
-# Installs the latest arduino-cli tool in /tmp/arduino-cli and the 10.3-2021.10 ARM GNU toolchain
+# Installs the latest arduino-cli tool in /tmp/arduino-cli and the latest ARM GNU toolchain
 # next to the Arduino-installed one.
 # Also changes the Nano 33 BLE configuration to use this toolchain.
 
@@ -24,27 +24,24 @@ set -e
 cd /tmp
 
 rm -rf arduino-cli*
-echo "Downloading Arduino CLI v0.35.2"
-curl -L -O "https://github.com/arduino/arduino-cli/releases/download/v0.35.2/arduino-cli_0.35.2_Linux_64bit.tar.gz"
-echo "Downloading ARM GNU Toolchain v10.3-2021.10"
-curl -L --output "10_3-2021_10.tar.bz2" "https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2?rev=78196d3461ba4c9089a67b5f33edf82a&hash=5631ACEF1F8F237389F14B41566964EC"
+echo "Downloading Arduino CLI"
+curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+echo "Downloading ARM GNU Toolchain v14.2"
+curl -L --output "14_2.tar.xz" "https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi.tar.xz"
 
-echo "Unpacking Arduino CLI"
-tar xzf arduino-cli_0.35.2_Linux_64bit.tar.gz
-
-# To use with MacOS, replace the previous two lines with:
-# curl -L -O "https://github.com/arduino/arduino-cli/releases/download/0.35.2/arduino-cli_0.35.2_MacOS_64bit.tar.gz"
-# tar xzf arduino-cli_0.35.2_MacOS_64bit.tar.gz
 
 echo "Installing arduino:mbed_nano core"
 /tmp/arduino-cli core update-index
 /tmp/arduino-cli core install arduino:mbed_nano
 
 echo "Unpacking toolchain"
-tar -xf "10_3-2021_10.tar.bz2"
-mv "gcc-arm-none-eabi-10.3-2021.10" "${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/10_3-2021_10"
-rm -f *.bz2 *.gz
+tar -xzf "14_2.tar.xz"
+mv "arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi" "${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/14_2"
+rm -f *.tar.xz *.gz
 
-cd "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1/"
+cd "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.2.1/"
 
-sed "s/\(nano33ble.*\)7-2017q4\(.*\)/\110_3-2021_10\2/" -i boards.txt
+files=$(grep -lr "7-2017q4")
+for f in $files; do
+    sed "s/\(nano33ble.*\)7-2017q4\(.*\)/\114_2\2/" -i $file
+done

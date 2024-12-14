@@ -48,7 +48,7 @@ readable_run python3 tensorflow/lite/micro/tools/project_generation/create_tflm_
 # Need the mbed core
 # readable_run "${SCRIPT_DIR}"/install_arduino_cli.sh
 # Replace downloaded CMSIS lib with the one Arduino uses
-# cp -r "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.1.1/cores/arduino/mbed/cmsis/CMSIS_5/CMSIS/" ${BASE_DIR}/third_party/cmsis
+# cp -r "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.2.1/cores/arduino/mbed/cmsis/CMSIS_5/CMSIS/" ${BASE_DIR}/third_party/cmsis
 # mv ${BASE_DIR}/third_party/cmsis/CMSIS/TARGET_CORTEX_M ${BASE_DIR}/third_party/cmsis/CMSIS/Core
 # rm -rf ${BASE_DIR}/third_party/cmsis//CMSIS/TARGET* ${BASE_DIR}/third_party/cmsis/CMSIS/RTOS2
 
