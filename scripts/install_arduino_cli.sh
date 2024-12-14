@@ -14,7 +14,7 @@
 # limitations under the License.
 # ==============================================================================
 #
-# Installs the latest arduino-cli tool in /tmp/arduino-cli and the latest ARM GNU toolchain
+# Installs the latest arduino-cli tool in /tmp/bin/arduino-cli and the latest ARM GNU toolchain
 # next to the Arduino-installed one.
 # Also changes the Nano 33 BLE configuration to use this toolchain.
 
@@ -36,6 +36,7 @@ echo "Installing arduino:mbed_nano core"
 
 echo "Unpacking toolchain"
 tar -xzf "14_2.tar.xz"
+mkdir -p "${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/14_2"
 mv "arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi" "${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/14_2"
 rm -f *.tar.xz *.gz
 

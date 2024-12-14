@@ -501,10 +501,10 @@ $(TENSORFLOW_ROOT)signal/src/window.cpp
 
 # lite/experimental needed for micro_speech example
 TFL_CC_SRCS := \
-$(shell find $(TENSORFLOW_ROOT)tensorflow/lite -type d \( -path $(TENSORFLOW_ROOT)tensorflow/lite/micro \) -prune -false -o -name "*.cpp" -o -name "*.c")
+$(shell find $(TENSORFLOW_ROOT)tensorflow/ -type d \( -path $(TENSORFLOW_ROOT)tensorflow/lite/micro \) -prune -false -o -name "*.cpp" -o -name "*.c")
 
 TFL_CC_HDRS := \
-$(shell find $(TENSORFLOW_ROOT)tensorflow/lite -type d \( -path $(TENSORFLOW_ROOT)tensorflow/lite/micro \) -prune -false -o -name "*.h")
+$(shell find $(TENSORFLOW_ROOT)tensorflow/ -type d \( -path $(TENSORFLOW_ROOT)tensorflow/lite/micro \) -prune -false -o -name "*.h")
 
 
 ifneq ($(BUILD_TYPE), no_tf_lite_static_memory)

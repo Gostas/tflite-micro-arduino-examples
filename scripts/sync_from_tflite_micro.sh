@@ -39,6 +39,7 @@ OPTIMIZED_KERNEL_DIR=cmsis_nn
 TARGET_ARCH=project_generation
 
 # Create the TFLM base tree
+echo "Creating TFLM base tree"
 python3 tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py \
   -e hello_world -e micro_speech -e person_detection \
   --makefile_options="TARGET=${TARGET} OPTIMIZED_KERNEL_DIR=${OPTIMIZED_KERNEL_DIR} TARGET_ARCH=${TARGET_ARCH}" "${BASE_DIR}"
@@ -71,7 +72,7 @@ find "${OUTPUT_DIR}" -maxdepth 1 \! -path "${OUTPUT_DIR}" -printf "%f\n" | xargs
 # move signal dir under src so it that it's part of the library
 mv ${OUTPUT_DIR}/signal $OUTPUT_DIR/src
 
-ARDUINO_LIB_DIR="${HOME}/Arduino/libraries/"
+ARDUINO_LIB_DIR="${HOME}/Arduino/libraries/tflite-micro-arduino-examples"
 
 # cd $ROOT_DIR
 
