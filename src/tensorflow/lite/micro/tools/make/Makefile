@@ -134,7 +134,7 @@ endif
 ifeq ($(TOOLCHAIN), armclang)
   CORE_OPTIMIZATION_LEVEL := -Oz
 else
-  CORE_OPTIMIZATION_LEVEL := -Os # optimize for size (uses mosts -O2 opts)
+  CORE_OPTIMIZATION_LEVEL := -Os # optimize for size (uses mostly -O2 opts)
 endif
 KERNEL_OPTIMIZATION_LEVEL := -O2
 THIRD_PARTY_KERNEL_OPTIMIZATION_LEVEL := -O2

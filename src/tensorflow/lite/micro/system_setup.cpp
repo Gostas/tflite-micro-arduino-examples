@@ -51,7 +51,7 @@ extern "C" int DebugVsnprintf(char* buffer, size_t buf_size, const char* format,
 {
   #ifndef TF_LITE_STRIP_ERROR_STRINGS
   return vsnprintf(buffer, buf_size, format, vlist);
-  #elif
+  #else
   return 0;
   #endif
 }

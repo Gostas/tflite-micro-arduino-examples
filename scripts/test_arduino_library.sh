@@ -26,7 +26,7 @@ ARDUINO_CLI_TOOL=arduino-cli
 # Necessary due to bug in arduino-cli that allows it to build files in pwd
 TEMP_BUILD_DIR=/tmp/tflite-arduino-build
 
-LIBRARY_DIR=${ARDUINO_LIBRARIES_DIR}
+LIBRARY_DIR=${ARDUINO_LIBRARIES_DIR}/tflite-micro-arduino-examples
 
 rm -rf ${TEMP_BUILD_DIR}
 #rm -rf ${ARDUINO_LIBRARIES_DIR}
