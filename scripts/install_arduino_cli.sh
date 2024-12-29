@@ -31,8 +31,8 @@ curl -L --output "14_2.tar.xz" "https://developer.arm.com/-/media/Files/download
 
 
 echo "Installing arduino:mbed_nano core"
-/tmp/arduino-cli core update-index
-/tmp/arduino-cli core install arduino:mbed_nano
+/tmp/bin/arduino-cli core update-index
+/tmp/bin/arduino-cli core install arduino:mbed_nano
 
 echo "Unpacking toolchain"
 tar -xzf "14_2.tar.xz"
