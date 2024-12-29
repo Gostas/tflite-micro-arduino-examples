@@ -38,9 +38,20 @@ jobs:
           git config --local user.name "Gostas"
           git config --local user.email "konst.pap@hotmail.com"
 
-          ./scripts/sync_from_tflite_micro.sh
+          ./scripts/sync_from_tflite_micro.sh "Arduino_TFLite"
+          ./scripts/test_arduino_library.sh "Arduino_TFLite"
+
+          if [[ $? == 0 ]]; then
+            echo "Tests passed"
+          else
+            echo "Tests failed"
+            exit 1
+          fi
 
           git checkout -b "AutoSync"
+
+          cp -aT ${HOME}/Arduino/libraries/Arduino_TFLite/* .
+
           git add *
 
           if [[ $(git status --porcelain | wc -l) == 0 ]]; then

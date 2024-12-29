@@ -22,18 +22,18 @@ set -e
 
 ARDUINO_HOME_DIR=${HOME}/Arduino
 ARDUINO_LIBRARIES_DIR=${ARDUINO_HOME_DIR}/libraries
-LIBRARY_DIR=${ARDUINO_LIBRARIES_DIR}/tflite-micro-arduino-examples
+LIBRARY_DIR=${ARDUINO_LIBRARIES_DIR}/${1}
 TOOLCHAIN_ROOT="${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/14_2/bin/"
 ARDUINO_CLI_TOOL=/tmp/bin/arduino-cli
 # Necessary due to bug in arduino-cli that allows it to build files in pwd
 TEMP_BUILD_DIR=/tmp/tflite-arduino-build
 
 rm -rf ${TEMP_BUILD_DIR}
-
 mkdir -p ${TEMP_BUILD_DIR}
 
-make -f ${LIBRARY_DIR}/src/tensorflow/lite/micro/tools/make/Makefile TENSORFLOW_ROOT="${LIBRARY_DIR}/src/" clean
-make -j4 -f ${LIBRARY_DIR}/src/tensorflow/lite/micro/tools/make/Makefile TARGET_TOOLCHAIN_ROOT=${TOOLCHAIN_ROOT} TENSORFLOW_ROOT="${LIBRARY_DIR}/src/" BUILD_TYPE=release_with_logs microlite
+cd ${LIBRARY_DIR}/src
+make -f tensorflow/lite/micro/tools/make/Makefile TENSORFLOW_ROOT="${LIBRARY_DIR}/src/" clean
+make -j4 -f tensorflow/lite/micro/tools/make/Makefile TARGET_TOOLCHAIN_ROOT=${TOOLCHAIN_ROOT} TENSORFLOW_ROOT="${LIBRARY_DIR}/src/" BUILD_TYPE=release_with_logs microlite
 mkdir -p ${LIBRARY_DIR}/src/cortex-m4/fpv4-sp-d16-softfp
 mv "/tmp/gen/cortex_m_generic_cortex-m4+sfp_release_with_logs/lib/libtensorflow-microlite.a" "${LIBRARY_DIR}/src/cortex-m4/fpv4-sp-d16-softfp/libtensorflow.a"
 
