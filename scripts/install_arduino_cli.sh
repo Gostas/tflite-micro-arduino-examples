@@ -44,5 +44,5 @@ cd "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.2.1/"
 
 files=$(grep -lr "7-2017q4")
 for f in $files; do
-    sed "s/\(nano33ble.*\)7-2017q4\(.*\)/\114_2\2/" -i $file
+    sed "s/\(nano33ble.*\)7-2017q4\(.*\)/\114_2\2/" -i $f
 done
