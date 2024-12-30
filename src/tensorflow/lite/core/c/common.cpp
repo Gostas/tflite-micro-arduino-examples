@@ -15,6 +15,10 @@ limitations under the License.
 
 #include "tensorflow/lite/core/c/common.h"
 
+#ifndef ARDUINO
+#include <cstdlib>
+#endif  // ARDUINO
+
 #include <cstring>
 #include <type_traits>
 #include <utility>
@@ -63,6 +67,36 @@ int TfLiteVarArrayEqual(const T* const a, const T* const b) {
   return TfLiteVarArrayEqualsArray(a, b->size, b->data);
 }
 
+#ifndef ARDUINO
+
+template <class T>
+T* TfLiteVarArrayCreate(const int size) {
+  const size_t alloc_size = TfLiteVarArrayGetSizeInBytes<T>(size);
+  if (alloc_size <= 0) {
+    return nullptr;
+  }
+  T* ret = (T*)malloc(alloc_size);
+  if (!ret) {
+    return nullptr;
+  }
+  ret->size = size;
+  return ret;
+}
+
+template <class T>
+T* TfLiteVarArrayCopy(const T* const src) {
+  if (!src) {
+    return nullptr;
+  }
+  T* const ret = TfLiteVarArrayCreate<T>(src->size);
+  if (ret) {
+    memcpy(ret->data, src->data, src->size * sizeof(src->data[0]));
+  }
+  return ret;
+}
+
+#endif  // ARDUINO
+
 template <class T>
 void TfLiteVarArrayFree(T* a) {
   free(a);
@@ -85,9 +119,222 @@ int TfLiteIntArrayEqualsArray(const TfLiteIntArray* a, int b_size,
   return TfLiteVarArrayEqualsArray(a, b_size, b_data);
 }
 
+#ifndef ARDUINO
+
+TfLiteIntArray* TfLiteIntArrayCreate(int size) {
+  return TfLiteVarArrayCreate<TfLiteIntArray>(size);
+}
+
+TfLiteIntArray* TfLiteIntArrayCopy(const TfLiteIntArray* src) {
+  return TfLiteVarArrayCopy(src);
+}
+
+void TfLiteIntArrayFree(TfLiteIntArray* a) { TfLiteVarArrayFree(a); }
+
+#endif  // ARDUINO
+
 int TfLiteFloatArrayGetSizeInBytes(int size) {
   return TfLiteVarArrayGetSizeInBytes<TfLiteFloatArray>(size);
 }
+
+#ifndef ARDUINO
+
+TfLiteFloatArray* TfLiteFloatArrayCreate(int size) {
+  return TfLiteVarArrayCreate<TfLiteFloatArray>(size);
+}
+
+TfLiteFloatArray* TfLiteFloatArrayCopy(const TfLiteFloatArray* src) {
+  return TfLiteVarArrayCopy(src);
+}
+
+void TfLiteFloatArrayFree(TfLiteFloatArray* a) { TfLiteVarArrayFree(a); }
+
+void TfLiteTensorDataFree(TfLiteTensor* t) {
+  if (t->allocation_type == kTfLiteVariantObject && t->data.data) {
+    delete static_cast<VariantData*>(t->data.data);
+  } else if (t->allocation_type == kTfLiteDynamic ||
+             t->allocation_type == kTfLitePersistentRo) {
+    if (t->data.raw) {
+#ifdef TF_LITE_TENSORFLOW_PROFILER
+      tflite::PauseHeapMonitoring(/*pause=*/true);
+      tflite::OnTfLiteTensorDealloc(t);
+#endif
+      free(t->data.raw);
+#ifdef TF_LITE_TENSORFLOW_PROFILER
+      tflite::PauseHeapMonitoring(/*pause=*/false);
+#endif
+    }
+  }
+  t->data.raw = nullptr;
+}
+
+void TfLiteQuantizationFree(TfLiteQuantization* quantization) {
+  if (quantization->type == kTfLiteAffineQuantization) {
+    TfLiteAffineQuantization* q_params =
+        (TfLiteAffineQuantization*)(quantization->params);
+    if (q_params->scale) {
+      TfLiteFloatArrayFree(q_params->scale);
+      q_params->scale = nullptr;
+    }
+    if (q_params->zero_point) {
+      TfLiteIntArrayFree(q_params->zero_point);
+      q_params->zero_point = nullptr;
+    }
+    free(q_params);
+  }
+  quantization->params = nullptr;
+  quantization->type = kTfLiteNoQuantization;
+}
+
+void TfLiteSparsityFree(TfLiteSparsity* sparsity) {
+  if (sparsity == nullptr) {
+    return;
+  }
+
+  if (sparsity->traversal_order) {
+    TfLiteIntArrayFree(sparsity->traversal_order);
+    sparsity->traversal_order = nullptr;
+  }
+
+  if (sparsity->block_map) {
+    TfLiteIntArrayFree(sparsity->block_map);
+    sparsity->block_map = nullptr;
+  }
+
+  if (sparsity->dim_metadata) {
+    int i = 0;
+    for (; i < sparsity->dim_metadata_size; i++) {
+      TfLiteDimensionMetadata metadata = sparsity->dim_metadata[i];
+      if (metadata.format == kTfLiteDimSparseCSR) {
+        TfLiteIntArrayFree(metadata.array_segments);
+        metadata.array_segments = nullptr;
+        TfLiteIntArrayFree(metadata.array_indices);
+        metadata.array_indices = nullptr;
+      }
+    }
+    free(sparsity->dim_metadata);
+    sparsity->dim_metadata = nullptr;
+  }
+
+  free(sparsity);
+}
+
+void TfLiteTensorFree(TfLiteTensor* t) {
+  TfLiteTensorDataFree(t);
+  if (t->dims) TfLiteIntArrayFree(t->dims);
+  t->dims = nullptr;
+
+  if (t->dims_signature) {
+    TfLiteIntArrayFree((TfLiteIntArray*)t->dims_signature);
+  }
+  t->dims_signature = nullptr;
+
+  TfLiteQuantizationFree(&t->quantization);
+  TfLiteSparsityFree(t->sparsity);
+  t->sparsity = nullptr;
+}
+
+void TfLiteTensorReset(TfLiteType type, const char* name, TfLiteIntArray* dims,
+                       TfLiteQuantizationParams quantization, char* buffer,
+                       size_t size, TfLiteAllocationType allocation_type,
+                       const void* allocation, bool is_variable,
+                       TfLiteTensor* tensor) {
+  TfLiteTensorFree(tensor);
+  tensor->type = type;
+  tensor->name = name;
+  tensor->dims = dims;
+  tensor->params = quantization;
+  tensor->data.raw = buffer;
+  tensor->bytes = size;
+  tensor->allocation_type = allocation_type;
+  tensor->allocation = allocation;
+  tensor->is_variable = is_variable;
+
+  tensor->quantization.type = kTfLiteNoQuantization;
+  tensor->quantization.params = nullptr;
+}
+
+TfLiteStatus TfLiteTensorCopy(const TfLiteTensor* src, TfLiteTensor* dst) {
+  if (!src || !dst) return kTfLiteOk;
+  if (src->bytes != dst->bytes) return kTfLiteError;
+  if (src == dst) return kTfLiteOk;
+  dst->type = src->type;
+  if (dst->dims) TfLiteIntArrayFree(dst->dims);
+  dst->dims = TfLiteIntArrayCopy(src->dims);
+  if (src->allocation_type == kTfLiteVariantObject) {
+    // An edge case exists in control flow ops when they copy inputs to outputs
+    // before invoking any body, in this case the `dst` will not have its
+    // `allocation_type` set properly, so we handle here for now.
+    if (dst->allocation_type != kTfLiteVariantObject) {
+      TfLiteTensorDataFree(dst);
+      dst->allocation_type = kTfLiteVariantObject;
+    }
+    auto* dst_vd = static_cast<VariantData*>(dst->data.data);
+    auto* src_vd = static_cast<VariantData*>(src->data.data);
+
+    // `CloneTo` will handle the case when `dst_vd` is nullptr, so it is safe
+    // to `CloneTo` something which was "freed". Also, returning from `CloneTo`
+    // will implicitly cast to `VariantData`; don't need static cast here.
+    dst->data.data = src_vd->CloneTo(dst_vd);
+  } else {
+    memcpy(dst->data.raw, src->data.raw, src->bytes);
+  }
+  dst->buffer_handle = src->buffer_handle;
+  dst->data_is_stale = src->data_is_stale;
+  dst->delegate = src->delegate;
+
+  return kTfLiteOk;
+}
+
+TfLiteStatus TfLiteTensorResizeMaybeCopy(size_t num_bytes, TfLiteTensor* tensor,
+                                         bool preserve_data) {
+  if (tensor->allocation_type != kTfLiteDynamic &&
+      tensor->allocation_type != kTfLitePersistentRo) {
+    return kTfLiteOk;
+  }
+#ifdef TF_LITE_TENSORFLOW_PROFILER
+  tflite::PauseHeapMonitoring(/*pause=*/true);
+#endif
+  // This buffer may be consumed by XNNPack.
+  size_t alloc_bytes = num_bytes + /*XNN_EXTRA_BYTES=*/16;
+  // TODO(b/145340303): Tensor data should be aligned.
+  if (!tensor->data.data) {
+    tensor->data.data = (char*)malloc(alloc_bytes);
+#ifdef TF_LITE_TENSORFLOW_PROFILER
+    tflite::OnTfLiteTensorAlloc(tensor, alloc_bytes);
+#endif
+  } else if (num_bytes > tensor->bytes) {
+#ifdef TF_LITE_TENSORFLOW_PROFILER
+    tflite::OnTfLiteTensorDealloc(tensor);
+#endif
+    if (preserve_data) {
+      tensor->data.data = (char*)realloc(tensor->data.data, alloc_bytes);
+    } else {
+      // Calling free and malloc can be more efficient as it avoids needlessly
+      // copying the data when it is not required.
+      free(tensor->data.data);
+      tensor->data.data = (char*)malloc(alloc_bytes);
+    }
+#ifdef TF_LITE_TENSORFLOW_PROFILER
+    tflite::OnTfLiteTensorAlloc(tensor, alloc_bytes);
+#endif
+  }
+#ifdef TF_LITE_TENSORFLOW_PROFILER
+  tflite::PauseHeapMonitoring(/*pause=*/false);
+#endif
+  tensor->bytes = num_bytes;
+  if (tensor->data.data == nullptr && num_bytes != 0) {
+    // We are done allocating but tensor is pointing to null and a valid size
+    // was requested, so we error.
+    return kTfLiteError;
+  }
+  return kTfLiteOk;
+}
+
+TfLiteStatus TfLiteTensorRealloc(size_t num_bytes, TfLiteTensor* tensor) {
+  return TfLiteTensorResizeMaybeCopy(num_bytes, tensor, true);
+}
+#endif  // ARDUINO
 
 const char* TfLiteTypeGetName(TfLiteType type) {
   switch (type) {
@@ -121,6 +368,8 @@ const char* TfLiteTypeGetName(TfLiteType type) {
       return "STRING";
     case kTfLiteFloat16:
       return "FLOAT16";
+    case kTfLiteBFloat16:
+      return "BFLOAT16";
     case kTfLiteFloat64:
       return "FLOAT64";
     case kTfLiteResource:

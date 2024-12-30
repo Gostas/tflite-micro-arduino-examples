@@ -80,7 +80,9 @@ typedef enum TfLiteExternalContextType {
   kTfLiteGemmLowpContext = 1,    /// include gemm_support.h to use.
   kTfLiteEdgeTpuContext = 2,     /// Placeholder for Edge TPU support.
   kTfLiteCpuBackendContext = 3,  /// include cpu_backend_context.h to use.
-  kTfLiteMaxExternalContexts = 4
+  kTfLiteLiteRtBufferContext =
+      4,  /// include external_litert_buffer_context.h to use.
+  kTfLiteMaxExternalContexts = 5
 } TfLiteExternalContextType;
 
 // Forward declare so dependent structs and methods can reference these types
@@ -100,7 +102,9 @@ typedef struct TfLiteExternalContext {
   TfLiteStatus (*Refresh)(struct TfLiteContext* context);
 } TfLiteExternalContext;
 
+// LINT.IfChange(optional_tensor)
 #define kTfLiteOptionalTensor (-1)
+// LINT.ThenChange(//tensorflow/compiler/mlir/lite/flatbuffer_export.cc:optional_tensor)
 
 /// Fixed size list of integers. Used for dimensions and inputs/outputs tensor
 /// indices
@@ -126,12 +130,27 @@ typedef struct TfLiteIntArray {
 /// in bytes.
 size_t TfLiteIntArrayGetSizeInBytes(int size);
 
+#ifndef ARDUINO
+/// Create a array of a given `size` (uninitialized entries).
+/// This returns a pointer, that you must free using TfLiteIntArrayFree().
+TfLiteIntArray* TfLiteIntArrayCreate(int size);
+#endif
+
 /// Check if two intarrays are equal. Returns 1 if they are equal, 0 otherwise.
 int TfLiteIntArrayEqual(const TfLiteIntArray* a, const TfLiteIntArray* b);
 
 /// Check if an intarray equals an array. Returns 1 if equals, 0 otherwise.
 int TfLiteIntArrayEqualsArray(const TfLiteIntArray* a, int b_size,
                               const int b_data[]);
+
+#ifndef ARDUINO
+/// Create a copy of an array passed as `src`.
+/// You are expected to free memory with TfLiteIntArrayFree
+TfLiteIntArray* TfLiteIntArrayCopy(const TfLiteIntArray* src);
+
+/// Free memory of array `a`.
+void TfLiteIntArrayFree(TfLiteIntArray* a);
+#endif  // ARDUINO
 
 /// Fixed size list of floats. Used for per-channel quantization.
 typedef struct TfLiteFloatArray {
@@ -154,6 +173,19 @@ typedef struct TfLiteFloatArray {
 /// Given the size (number of elements) in a TfLiteFloatArray, calculate its
 /// size in bytes.
 int TfLiteFloatArrayGetSizeInBytes(int size);
+
+#ifndef ARDUINO
+/// Create a array of a given `size` (uninitialized entries).
+/// This returns a pointer, that you must free using TfLiteFloatArrayFree().
+TfLiteFloatArray* TfLiteFloatArrayCreate(int size);
+
+/// Create a copy of an array passed as `src`.
+/// You are expected to free memory with TfLiteFloatArrayFree.
+TfLiteFloatArray* TfLiteFloatArrayCopy(const TfLiteFloatArray* src);
+
+/// Free memory of array `a`.
+void TfLiteFloatArrayFree(TfLiteFloatArray* a);
+#endif  // ARDUINO
 
 // Since we must not depend on any libraries, define a minimal subset of
 // error macros while avoiding names that have pre-conceived meanings like
@@ -253,6 +285,17 @@ int TfLiteFloatArrayGetSizeInBytes(int size);
     }                                      \
   } while (0)
 
+// `std::unreachable` not available until CC23.
+#ifdef __GNUC__  // GCC, Clang, ICC
+
+#define TFL_UNREACHABLE() (__builtin_unreachable())
+
+#elif defined(_MSC_VER)  // MSVC
+
+#define TFL_UNREACHABLE() (__assume(false))
+
+#endif
+
 /// Single-precision complex data type compatible with the C99 definition.
 typedef struct TfLiteComplex64 {
   float re, im;  /// real and imaginary parts, respectively.
@@ -268,11 +311,18 @@ typedef struct TfLiteFloat16 {
   uint16_t data;
 } TfLiteFloat16;
 
+/// bfloat16 data type compatible with the Google Brain definition.
+/// https://cloud.google.com/tpu/docs/bfloat16.
+/// This provides 1 bit of sign, 8 bits of exponent, and 7 bits of mantissa.
+typedef struct TfLiteBFloat16 {
+  uint16_t data;
+} TfLiteBFloat16;
+
 /// Return the name of a given type, for error reporting purposes.
 const char* TfLiteTypeGetName(TfLiteType type);
 
 /// SupportedQuantizationTypes.
-typedef enum TfLiteQuantizationType {
+typedef enum TfLiteQuantizationType : int {
   /// No quantization.
   kTfLiteNoQuantization = 0,
   /// Affine quantization (with support for per-channel quantization).
@@ -315,6 +365,7 @@ typedef union TfLitePtrUnion {
   uint64_t* u64;
   float* f;
   TfLiteFloat16* f16;
+  TfLiteBFloat16* bf16;
   double* f64;
   char* raw;
   const char* raw_const;
@@ -394,12 +445,6 @@ enum {
   kTfLiteNullBufferHandle = -1,
 };
 
-/// Storage format of each dimension in a sparse tensor.
-typedef enum TfLiteDimensionType {
-  kTfLiteDimDense = 0,
-  kTfLiteDimSparseCSR,
-} TfLiteDimensionType;
-
 /// Metadata to encode each dimension in a sparse tensor.
 typedef struct TfLiteDimensionMetadata {
   TfLiteDimensionType format;
@@ -437,9 +482,125 @@ typedef enum TfLiteCustomAllocationFlags {
   kTfLiteCustomAllocationFlagsSkipAlignCheck = 1,
 } TfLiteCustomAllocationFlags;
 
+enum { kTfLiteNoBufferIdentifier = SIZE_MAX };
+
 /// A tensor in the interpreter system which is a wrapper around a buffer of
 /// data including a dimensionality (or NULL if not currently defined).
-// NOTE: TF_LITE_STATIC_MEMORY is opt-in only at compile time.
+#ifndef ARDUINO
+typedef struct TfLiteTensor {
+  /// The data type specification for data stored in `data`. This affects
+  /// what member of `data` union should be used.
+  TfLiteType type;
+  /// A union of data pointers. The appropriate type should be used for a typed
+  /// tensor based on `type`.
+  TfLitePtrUnion data;
+  /// A pointer to a structure representing the dimensionality interpretation
+  /// that the buffer should have. NOTE: the product of elements of `dims`
+  /// and the element datatype size should be equal to `bytes` below.
+  TfLiteIntArray* dims;
+  /// Quantization information.
+  TfLiteQuantizationParams params;
+  /// How memory is mapped
+  ///  kTfLiteMmapRo: Memory mapped read only.
+  ///  i.e. weights
+  ///  kTfLiteArenaRw: Arena allocated read write memory
+  ///  (i.e. temporaries, outputs).
+  TfLiteAllocationType allocation_type;
+  /// The number of bytes required to store the data of this Tensor. I.e.
+  /// (bytes of each element) * dims[0] * ... * dims[n-1].  For example, if
+  /// type is kTfLiteFloat32 and dims = {3, 2} then
+  /// bytes = sizeof(float) * 3 * 2 = 4 * 3 * 2 = 24.
+  size_t bytes;
+
+  /// An opaque pointer to a tflite::MMapAllocation
+  const void* allocation;
+
+  /// Null-terminated name of this tensor.
+  const char* name;
+
+  /// The delegate which knows how to handle `buffer_handle`.
+  ///
+  /// WARNING: This is an experimental interface that is subject to change.
+  struct TfLiteDelegate* delegate;
+
+  /// An integer buffer handle that can be handled by `delegate`.
+  /// The value is valid only when delegate is not null.
+  ///
+  /// WARNING: This is an experimental interface that is subject to change.
+  TfLiteBufferHandle buffer_handle;
+
+  /// If the delegate uses its own buffer (e.g. GPU memory), the delegate is
+  /// responsible to set data_is_stale to true.
+  /// `delegate->CopyFromBufferHandle` can be called to copy the data from
+  /// delegate buffer.
+  ///
+  /// WARNING: This is an experimental interface that is subject to change.
+  bool data_is_stale;
+
+  /// True if the tensor is a variable.
+  bool is_variable;
+
+  /// Quantization information. Replaces params field above.
+  TfLiteQuantization quantization;
+
+  /// Parameters used to encode a sparse tensor.
+  /// This is optional. The field is NULL if a tensor is dense.
+  ///
+  /// WARNING: This is an experimental interface that is subject to change.
+  TfLiteSparsity* sparsity;
+
+  /// Optional. Encodes shapes with unknown dimensions with -1. This field is
+  /// only populated when unknown dimensions exist in a read-write tensor (i.e.
+  /// an input or output tensor). (e.g.  `dims` contains [1, 1, 1, 3] and
+  /// `dims_signature` contains [1, -1, -1, 3]).  If no unknown dimensions exist
+  /// then `dims_signature` is either null, or set to an empty array.  Note that
+  /// this field only exists when TF_LITE_STATIC_MEMORY is not defined.
+  const TfLiteIntArray* dims_signature;
+} TfLiteTensor;
+
+/// A structure representing an instance of a node.
+/// This structure only exhibits the inputs, outputs, user defined data and some
+/// node properties (like statefulness), not other features like the type.
+typedef struct TfLiteNode {
+  /// Inputs to this node expressed as indices into the simulator's tensors.
+  TfLiteIntArray* inputs;
+
+  /// Outputs to this node expressed as indices into the simulator's tensors.
+  TfLiteIntArray* outputs;
+
+  /// intermediate tensors to this node expressed as indices into the
+  /// simulator's tensors.
+  TfLiteIntArray* intermediates;
+
+  /// Temporary tensors uses during the computations. This usually contains no
+  /// tensors, but ops are allowed to change that if they need scratch space of
+  /// any sort.
+  TfLiteIntArray* temporaries;
+
+  /// Opaque data provided by the node implementer through `Registration.init`.
+  void* user_data;
+
+  /// Opaque data provided to the node if the node is a builtin. This is usually
+  /// a structure defined in builtin_op_data.h
+  void* builtin_data;
+
+  /// Custom initial data. This is the opaque data provided in the flatbuffer.
+  ///
+  /// WARNING: This is an experimental interface that is subject to change.
+  const void* custom_initial_data;
+  int custom_initial_data_size;
+
+  /// The pointer to the delegate. This is non-null only when the node is
+  /// created by calling `interpreter.ModifyGraphWithDelegate`.
+  ///
+  /// WARNING: This is an experimental interface that is subject to change.
+  struct TfLiteDelegate* delegate;
+
+  /// Whether this op might have side effect (e.g. stateful op).
+  bool might_have_side_effect;
+} TfLiteNode;
+#else   // defined(ARDUINO)?
+// NOTE: This flag is opt-in only at compile time.
 //
 // Specific reduced TfLiteTensor struct for TF Micro runtime. This struct
 // contains only the minimum fields required to initialize and prepare a micro
@@ -523,6 +684,7 @@ typedef struct TfLiteNode {
   const void* custom_initial_data;
   int custom_initial_data_size;
 } TfLiteNode;
+#endif  // ARDUINO
 
 /// Light-weight tensor struct for TF Micro runtime. Provides the minimal amount
 /// of information required for a kernel to run during TfLiteRegistration::Eval.
@@ -541,6 +703,57 @@ typedef struct TfLiteEvalTensor {
   /// what member of `data` union should be used.
   TfLiteType type;
 } TfLiteEvalTensor;
+
+#ifndef ARDUINO
+/// Free data memory of tensor `t`.
+void TfLiteTensorDataFree(TfLiteTensor* t);
+
+/// Free quantization data.
+void TfLiteQuantizationFree(TfLiteQuantization* quantization);
+
+/// Free sparsity parameters.
+void TfLiteSparsityFree(TfLiteSparsity* sparsity);
+
+/// Free memory of tensor `t`.
+void TfLiteTensorFree(TfLiteTensor* t);
+
+/// Set all of a tensor's fields (and free any previously allocated data).
+void TfLiteTensorReset(TfLiteType type, const char* name, TfLiteIntArray* dims,
+                       TfLiteQuantizationParams quantization, char* buffer,
+                       size_t size, TfLiteAllocationType allocation_type,
+                       const void* allocation, bool is_variable,
+                       TfLiteTensor* tensor);
+
+/// Copies the contents of `src` in `dst`.
+/// Function does nothing if either `src` or `dst` is passed as nullptr and
+/// return `kTfLiteOk`.
+/// Returns `kTfLiteError` if `src` and `dst` doesn't have matching data size.
+/// Note function copies contents, so it won't create new data pointer
+/// or change allocation type.
+/// All Tensor related properties will be copied from `src` to `dst` like
+/// quantization, sparsity, ...
+TfLiteStatus TfLiteTensorCopy(const TfLiteTensor* src, TfLiteTensor* dst);
+
+/// Change the size of the memory block owned by `tensor` to `num_bytes`.
+/// Tensors with allocation types other than `kTfLiteDynamic` will be ignored
+/// and a `kTfLiteOk` will be returned. `tensor`'s internal data buffer will be
+/// assigned a pointer which can safely be passed to free or realloc if
+/// `num_bytes` is zero. If `preserve_data` is true, tensor data will be
+/// unchanged in the range from the start of the region up to the minimum of the
+/// old and new sizes. In the case of NULL tensor, or an error allocating new
+/// memory, returns `kTfLiteError`.
+TfLiteStatus TfLiteTensorResizeMaybeCopy(size_t num_bytes, TfLiteTensor* tensor,
+                                         bool preserve_data);
+
+/// Change the size of the memory block owned by `tensor` to `num_bytes`.
+/// Tensors with allocation types other than `kTfLiteDynamic` will be ignored
+/// and a `kTfLiteOk` will be returned. `tensor`'s internal data buffer will be
+/// assigned a pointer which can safely be passed to free or realloc if
+/// `num_bytes` is zero. Tensor data will be unchanged in the range from the
+/// start of the region up to the minimum of the old and new sizes. In the case
+/// of NULL tensor, or an error allocating new memory, returns `kTfLiteError`.
+TfLiteStatus TfLiteTensorRealloc(size_t num_bytes, TfLiteTensor* tensor);
+#endif  // ARDUINO
 
 /// WARNING: This is an experimental interface that is subject to change.
 ///
@@ -813,11 +1026,17 @@ typedef struct TfLiteContext {
                                          int subgraph_index);
 } TfLiteContext;
 
-/// `TfLiteRegistrationExternal` is an external version of `TfLiteRegistration`
+/// `TfLiteOperator` is an external version of `TfLiteRegistration`
 /// for C API which doesn't use internal types (such as `TfLiteContext`) but
 /// only uses stable API types (such as `TfLiteOpaqueContext`). The purpose of
 /// each field is the exactly the same as with `TfLiteRegistration`.
-typedef struct TfLiteRegistrationExternal TfLiteRegistrationExternal;
+typedef struct TfLiteOperator TfLiteOperator;
+
+#ifndef DOXYGEN_SKIP
+// For backwards compatibility.
+// Deprecated. Use TfLiteOperator instead.
+typedef TfLiteOperator TfLiteRegistrationExternal;
+#endif
 
 /// The valid values of the `inplace_operator` field in `TfLiteRegistration`.
 /// This allow an op to signal to the runtime that the same data pointer
@@ -884,7 +1103,7 @@ static const int kTfLiteMaxSharableOpInputs = 3;
 /// It is a struct containing "methods" (C function pointers) that will be
 /// invoked by the TF Lite runtime to evaluate instances of the operation.
 ///
-/// See also `TfLiteRegistrationExternal` which is a more ABI-stable equivalent.
+/// See also `TfLiteOperator` which is a more ABI-stable equivalent.
 typedef struct TfLiteRegistration {
   /// Initializes the op from serialized data.
   /// Called only *once* for the lifetime of the op, so any one-time allocations
@@ -955,12 +1174,12 @@ typedef struct TfLiteRegistration {
   /// properly.
   int version;
 
-  /// The external version of `TfLiteRegistration`. Since we can't use internal
-  /// types (such as `TfLiteContext`) for C API to maintain ABI stability.
-  /// C API user will provide `TfLiteRegistrationExternal` to implement custom
-  /// ops. We keep it inside of `TfLiteRegistration` and use it to route
-  /// callbacks properly.
-  TfLiteRegistrationExternal* registration_external;
+  /// The external (i.e. ABI-stable) version of `TfLiteRegistration`.
+  /// Since we can't use internal types (such as `TfLiteContext`) for C API to
+  /// maintain ABI stability.  C API user will provide `TfLiteOperator` to
+  /// implement custom ops.  We keep it inside of `TfLiteRegistration` and use
+  /// it to route callbacks properly.
+  TfLiteOperator* registration_external;
 
   /// Retrieves asynchronous kernel.
   ///
@@ -1000,7 +1219,7 @@ typedef struct TfLiteRegistration_V3 {
   int32_t builtin_code;
   const char* custom_name;
   int version;
-  TfLiteRegistrationExternal* registration_external;
+  TfLiteOperator* registration_external;
   struct TfLiteAsyncKernel* (*async_kernel)(TfLiteContext* context,
                                             TfLiteNode* node);
 } TfLiteRegistration_V3;
@@ -1026,7 +1245,7 @@ typedef struct TfLiteRegistration_V2 {
   int32_t builtin_code;
   const char* custom_name;
   int version;
-  TfLiteRegistrationExternal* registration_external;
+  TfLiteOperator* registration_external;
 } TfLiteRegistration_V2;
 
 /// \private
@@ -1202,6 +1421,19 @@ typedef struct TfLiteOpaqueDelegateBuilder {
   /// Bitmask flags. See the comments in `TfLiteDelegateFlags`.
   int64_t flags;
 } TfLiteOpaqueDelegateBuilder;
+
+#ifndef ARDUINO
+// See c_api_opaque.h.
+// This declaration in common.h is only for backwards compatibility.
+// NOTE: This function is part of the TensorFlow Lite Extension APIs, see above.
+TfLiteOpaqueDelegate* TfLiteOpaqueDelegateCreate(
+    const TfLiteOpaqueDelegateBuilder* opaque_delegate_builder);
+
+// See c_api_opaque.h.
+// This declaration in common.h is only for backwards compatibility.
+// NOTE: This function is part of the TensorFlow Lite Extension APIs, see above.
+void TfLiteOpaqueDelegateDelete(TfLiteOpaqueDelegate* delegate);
+#endif  // ARDUINO
 
 // See c_api_opaque.h.
 // This declaration in common.h is only for backwards compatibility.
