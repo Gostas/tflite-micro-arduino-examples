@@ -18,7 +18,7 @@ limitations under the License.
 #if !defined(TF_LITE_STRIP_ERROR_STRINGS)
 #include <cstdarg>
 #include <cstddef>
-// These functions can be used independent of the MicroErrorReporter to get
+// These functions can be used independently of the MicroErrorReporter to get
 // printf-like functionalities and are common to all target platforms.
 void MicroPrintf(const char* format, ...);
 void VMicroPrintf(const char* format, va_list args);
