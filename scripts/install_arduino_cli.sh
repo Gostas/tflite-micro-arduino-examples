@@ -36,7 +36,6 @@ echo "Installing arduino:mbed_nano core"
 
 echo "Unpacking toolchain"
 tar -xJf "14_2.tar.xz"
-mkdir -p "${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/14_2"
 mv "arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi" "${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/14_2"
 rm -f *.tar.xz *.gz
 
