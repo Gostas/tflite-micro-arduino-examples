@@ -52,7 +52,7 @@ jobs:
       - name: Commit changes
         run: |
           git checkout -b "AutoSync"
-          cp -aT ${HOME}/Arduino/libraries/Arduino_TFLite/* .
+          cp -a ${HOME}/Arduino/libraries/Arduino_TFLite/* .
           git add *
           if [[ $(git status --porcelain | wc -l) == 0 ]]; then
             echo "no changes"
