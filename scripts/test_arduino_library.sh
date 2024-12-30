@@ -20,8 +20,7 @@
 
 set -e
 
-ARDUINO_HOME_DIR=${HOME}/Arduino
-ARDUINO_LIBRARIES_DIR=${ARDUINO_HOME_DIR}/libraries
+ARDUINO_LIBRARIES_DIR=${HOME}/Arduino/libraries
 LIBRARY_DIR=${ARDUINO_LIBRARIES_DIR}/${1}
 TOOLCHAIN_ROOT="${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/14_2/bin/"
 ARDUINO_CLI_TOOL=/tmp/bin/arduino-cli
@@ -32,10 +31,10 @@ rm -rf ${TEMP_BUILD_DIR}
 mkdir -p ${TEMP_BUILD_DIR}
 
 cd ${LIBRARY_DIR}/src
-make -f tensorflow/lite/micro/tools/make/Makefile TENSORFLOW_ROOT="${LIBRARY_DIR}/src/" clean
-make -j4 -f tensorflow/lite/micro/tools/make/Makefile TARGET_TOOLCHAIN_ROOT=${TOOLCHAIN_ROOT} TENSORFLOW_ROOT="${LIBRARY_DIR}/src/" BUILD_TYPE=release_with_logs microlite
+make -f tensorflow/lite/micro/tools/make/Makefile clean
+make -j4 -f tensorflow/lite/micro/tools/make/Makefile TARGET_TOOLCHAIN_ROOT=${TOOLCHAIN_ROOT} BUILD_TYPE=release_with_logs microlite
 mkdir -p ${LIBRARY_DIR}/src/cortex-m4/fpv4-sp-d16-softfp
-mv "/tmp/gen/cortex_m_generic_cortex-m4+sfp_release_with_logs/lib/libtensorflow-microlite.a" "${LIBRARY_DIR}/src/cortex-m4/fpv4-sp-d16-softfp/libtensorflow.a"
+mv "/tmp/gen/cortex_m_generic_cortex-m4+sfp_release_with_logs/lib/libtensorflow-microlite.a" "${LIBRARY_DIR}/src/cortex-m4/fpv4-sp-d16-softfp/libtflm.a"
 
 # Installs all dependencies for Arduino
 InstallLibraryDependencies () {

@@ -32,15 +32,16 @@ jobs:
         with:
           token: ${{ secrets.ACTIONS_TOKEN }}
 
-      - name: Sync the code
+      - name: Sync code from upstream
         run: |
           pip3 install six Pillow Wave numpy
           git config --local user.name "Gostas"
           git config --local user.email "konst.pap@hotmail.com"
-
           ./scripts/sync_from_tflite_micro.sh "Arduino_TFLite"
-          ./scripts/test_arduino_library.sh "Arduino_TFLite"
 
+      - name: Run tests
+        run: |
+          ./scripts/test_arduino_library.sh "Arduino_TFLite"
           if [[ $? == 0 ]]; then
             echo "Tests passed"
           else
@@ -48,18 +49,16 @@ jobs:
             exit 1
           fi
 
+      - name: Commit changes
+        run: |
           git checkout -b "AutoSync"
-
           cp -aT ${HOME}/Arduino/libraries/Arduino_TFLite/* .
-
           git add *
-
           if [[ $(git status --porcelain | wc -l) == 0 ]]; then
             echo "no changes"
           else
             git commit -m "Sync from tflite-micro."
           fi
-
           git push --set-upstream origin AutoSync
 
       - name: Create Pull Request
