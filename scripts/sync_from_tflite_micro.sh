@@ -21,7 +21,6 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="${SCRIPT_DIR}/.."
-cd "${ROOT_DIR}"
 
 TEMP_DIR=$(mktemp -d)
 cd "${TEMP_DIR}"
@@ -49,9 +48,8 @@ echo create_tflm_tree.py done
 # Need the mbed core
 "${SCRIPT_DIR}"/install_arduino_cli.sh
 # Replace downloaded CMSIS lib with the one Arduino uses
-cp -a "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.2.1/cores/arduino/mbed/cmsis/CMSIS_5/CMSIS/" ${BASE_DIR}/third_party/cmsis
-mv ${BASE_DIR}/third_party/cmsis/CMSIS/TARGET_CORTEX_M ${BASE_DIR}/third_party/cmsis/CMSIS/Core
-rm -rf ${BASE_DIR}/third_party/cmsis//CMSIS/TARGET* ${BASE_DIR}/third_party/cmsis/CMSIS/RTOS2
+rm -rf ${BASE_DIR}/third_party/cmsis/CMSIS/Core/*
+cp "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.2.1/cores/arduino/mbed/cmsis/CMSIS_5/CMSIS/TARGET_CORTEX_M"/* ${BASE_DIR}/third_party/cmsis/CMSIS/Core -a
 
 
 # Create the final tree in ${OUTPUT_DIR} using the base tree in ${BASE_DIR}
@@ -71,8 +69,6 @@ find "${OUTPUT_DIR}" -maxdepth 1 \! -path "${OUTPUT_DIR}" -printf "%f\n" | xargs
 mv ${OUTPUT_DIR}/signal $OUTPUT_DIR/src
 
 ARDUINO_LIB_DIR="${HOME}/Arduino/libraries/${1}"
-
-# cd $ROOT_DIR
 
 # copy ${OUTPUT_DIR} to the repo
 mkdir -p "${HOME}/Arduino/libraries/"
