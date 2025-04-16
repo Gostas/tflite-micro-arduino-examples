@@ -49,7 +49,7 @@ echo create_tflm_tree.py done
 "${SCRIPT_DIR}"/install_arduino_cli.sh
 # Replace downloaded CMSIS lib with the one Arduino uses
 rm -rf ${BASE_DIR}/third_party/cmsis/CMSIS/Core/*
-cp "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.2.1/cores/arduino/mbed/cmsis/CMSIS_5/CMSIS/TARGET_CORTEX_M"/* ${BASE_DIR}/third_party/cmsis/CMSIS/Core -a
+cp "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.2.4/cores/arduino/mbed/cmsis/CMSIS_5/CMSIS/TARGET_CORTEX_M"/* ${BASE_DIR}/third_party/cmsis/CMSIS/Core -a
 
 
 # Create the final tree in ${OUTPUT_DIR} using the base tree in ${BASE_DIR}

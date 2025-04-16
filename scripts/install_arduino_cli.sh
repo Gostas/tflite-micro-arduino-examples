@@ -27,7 +27,7 @@ rm -rf arduino-cli*
 echo "Downloading Arduino CLI"
 curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
 echo "Downloading ARM GNU Toolchain v14.2"
-curl -L --output "14_2.tar.xz" "https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi.tar.xz"
+curl -L --output "14_2.tar.xz" "https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-aarch64-arm-none-eabi.tar.xz"
 
 
 echo "Installing arduino:mbed_nano core"
@@ -37,10 +37,10 @@ echo "Installing arduino:mbed_nano core"
 
 echo "Unpacking toolchain"
 tar -xJf "14_2.tar.xz"
-mv "arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi" "${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/14_2"
+mv "arm-gnu-toolchain-14.2.rel1-aarch64-arm-none-eabi" "${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/14_2"
 rm -f *.tar.xz *.gz
 
-cd "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.2.1/"
+cd "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.2.4/"
 
 files=$(grep -lr "7-2017q4")
 for f in $files; do
