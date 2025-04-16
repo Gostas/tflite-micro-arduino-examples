@@ -76,9 +76,9 @@ like microphones, cameras, and accelerometers is specific to the `Nano 33 BLE Se
 Compiling sketches that use this library takes a lot of time. We can speed up this process by avoiding recompiling the library every time. To create a static library (.a) which is linked to the sketch during compile time, you can do the following steps.
 
 ### Toolchain
-To compile this library, it is necessary to install a newer toolchain than what Arduino currently provides. I am using the [Arm GNU Embedded Toolchain Version 13.3.Rel1](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads). It includes several intrinsics required by the library.
+To compile this library, it is necessary to install a newer toolchain than what Arduino currently provides. I am using the [Arm GNU Embedded Toolchain Version 14.2.Rel1](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads). It includes several intrinsics required by the library.
 
-We need to tell Arduino to use the newer toolchain. In `~/.arduino15/packages/arduino/hardware/mbed_nano/4.2.1/` open the files `boards.txt` and `platforms.txt` and replace any occurrences of
+We need to tell Arduino to use the newer toolchain. In `~/.arduino15/packages/arduino/hardware/mbed_nano/4.2.4/` open the files `boards.txt` and `platforms.txt` and replace any occurrences of
 ```
 {runtime.tools.arm-none-eabi-gcc-7-2017q4.path}/bin/
 ```
