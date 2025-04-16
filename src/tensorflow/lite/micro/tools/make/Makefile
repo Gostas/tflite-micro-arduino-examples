@@ -37,7 +37,7 @@ endif
 TENSORFLOW_ROOT := ./
 RELATIVE_MAKEFILE_DIR := tensorflow/lite/micro/tools/make
 MAKEFILE_DIR := $(TENSORFLOW_ROOT)$(RELATIVE_MAKEFILE_DIR)
-ARDUINO_BOARD_DIR := ${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.2.1
+ARDUINO_BOARD_DIR := ${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.2.4
 BAZEL_ROOT := $(TENSORFLOW_ROOT)
 
 ifeq ($(BAZEL_ROOT),)
