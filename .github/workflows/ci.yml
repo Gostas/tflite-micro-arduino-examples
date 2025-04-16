@@ -20,7 +20,7 @@ on:
 
 jobs:
   arduino:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
 
     if: |
       github.event_name == 'workflow_dispatch' ||
