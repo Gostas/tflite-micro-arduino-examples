@@ -21,28 +21,52 @@
 
 set -e
 
+if [[ $# -eq 0 ]]; then
+	DRY_RUN=0
+	arduino_cli=/tmp/bin/arduino-cli
+else
+	while getopts "d" opt; do
+		case $opt in
+		  d)
+			DRY_RUN=1
+			arduino_cli=arduino-cli
+			;;
+		  *)
+			echo "Invalid option"
+			exit 1
+			;;
+		esac
+	done
+fi
+
 cd /tmp
 
-rm -rf arduino-cli*
-echo "Downloading Arduino CLI"
-curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
-echo "Downloading ARM GNU Toolchain v14.2"
-curl -L --output "14_2.tar.xz" "https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-aarch64-arm-none-eabi.tar.xz"
+if [[ $DRY_RUN -eq 0 ]]; then	
+	rm -rf arduino-cli*
+	echo "Downloading Arduino CLI"
+	curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+	echo "Downloading ARM GNU Toolchain v14.2"
+	curl -L --output "14_2.tar.xz" "https://developer.arm.com/-/media/Files/downloads/gnu/14.2.rel1/binrel/arm-gnu-toolchain-14.2.rel1-aarch64-arm-none-eabi.tar.xz"
+		
+	echo "Installing arduino:mbed_nano core"
+	$arduino_cli core update-index
+	$arduino_cli lib update-index
+	$arduino_cli core install arduino:mbed_nano
+	
+	echo "Unpacking toolchain"
+	tar -xJf "14_2.tar.xz"
+	mv "arm-gnu-toolchain-14.2.rel1-aarch64-arm-none-eabi" "${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/14_2"
+	rm -f *.tar.xz *.gz
+fi
 
-
-echo "Installing arduino:mbed_nano core"
-/tmp/bin/arduino-cli core update-index
-/tmp/bin/arduino-cli lib update-index
-/tmp/bin/arduino-cli core install arduino:mbed_nano
-
-echo "Unpacking toolchain"
-tar -xJf "14_2.tar.xz"
-mv "arm-gnu-toolchain-14.2.rel1-aarch64-arm-none-eabi" "${HOME}/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/14_2"
-rm -f *.tar.xz *.gz
-
-cd "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/4.2.4/"
+CORE_VER=$(${arduino_cli} core list | grep mbed_nano | tr -s [:space:] | cut -d ' ' -f2)
+cd "${HOME}/.arduino15/packages/arduino/hardware/mbed_nano/${CORE_VER}/"
 
 files=$(grep -lr "7-2017q4")
-for f in $files; do
-    sed "s/\(nano33ble.*\)7-2017q4\(.*\)/\114_2\2/" -i $f
-done
+
+if [[ $DRY_RUN -eq 0 ]]; then
+	for f in $files; do
+	    sed "s/\(nano33ble.*\)7-2017q4\(.*\)/\114_2\2/" -i $f
+	done
+fi
+
