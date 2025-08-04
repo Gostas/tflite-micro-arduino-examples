@@ -46,6 +46,7 @@ python3 tensorflow/lite/micro/tools/project_generation/create_tflm_tree.py \
 echo create_tflm_tree.py done
 
 # Need the mbed core
+${SCRIPT_DIR}/install_arduino_cli.sh
 CORE_VER=$(/tmp/bin/arduino-cli core list | grep mbed_nano | tr -s [:space:] | cut -d ' ' -f2)
 # Replace downloaded CMSIS lib with the one Arduino uses
 rm -rf ${BASE_DIR}/third_party/cmsis/CMSIS/Core/*
